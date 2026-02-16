@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
+import 'package:localhire/screens/complete_profile.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String phoneNumber;
@@ -239,8 +239,14 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       return;
     }
 
-    debugPrint("Entered OTP: $otp");
-  }
+    Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (context) => const CompleteProfileScreen(),
+    ),
+  );
+}
+
 
   void _resendOtp() {
     debugPrint("Resending OTP to ${widget.phoneNumber}");

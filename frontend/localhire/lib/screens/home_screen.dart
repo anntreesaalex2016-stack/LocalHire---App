@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import "saved_screen.dart";
+import "job_details_screen.dart";
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
       "location": "Mumbai, Maharashtra",
       "salary": 1800,
       "date": "Nov 25, 2026",
-      "time": "2h ago"
+      "time": "2h ago",
     },
     {
       "type": "CONTRACT",
@@ -29,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
       "location": "Bangalore, Karnataka",
       "salary": 1200,
       "date": "Nov 25, 2026",
-      "time": "5h ago"
+      "time": "5h ago",
     },
     {
       "type": "PART-TIME",
@@ -37,19 +38,18 @@ class _HomeScreenState extends State<HomeScreen> {
       "location": "New Delhi",
       "salary": 2250,
       "date": "Nov 25, 2026",
-      "time": "1d ago"
+      "time": "1d ago",
     },
   ];
 
   @override
   Widget build(BuildContext context) {
     List filteredJobs = jobs.where((job) {
-      final matchesSearch = job["title"]
-          .toLowerCase()
-          .contains(searchText.toLowerCase());
+      final matchesSearch = job["title"].toLowerCase().contains(
+        searchText.toLowerCase(),
+      );
 
-      final matchesType =
-          selectedType == "All" || job["type"] == selectedType;
+      final matchesType = selectedType == "All" || job["type"] == selectedType;
 
       return matchesSearch && matchesType;
     }).toList();
@@ -66,7 +66,6 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Column(
           children: [
-
             const SizedBox(height: 10),
 
             // LOCATION + TITLE + NOTIFICATION
@@ -74,28 +73,23 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  const Icon(Icons.location_on,
-                      color: Color(0xFFFFB544)),
+                  const Icon(Icons.location_on, color: Color(0xFFFFB544)),
                   const SizedBox(width: 5),
                   const Expanded(
                     child: Text(
                       "Mumbai, Maharashtra",
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600),
+                      style: TextStyle(fontWeight: FontWeight.w600),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   const Text(
                     "LocalHire",
-                    style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const Spacer(),
                   Stack(
                     children: const [
-                      Icon(Icons.notifications_none,
-                          size: 28),
+                      Icon(Icons.notifications_none, size: 28),
                       Positioned(
                         right: 2,
                         top: 2,
@@ -103,9 +97,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           radius: 4,
                           backgroundColor: Colors.red,
                         ),
-                      )
+                      ),
                     ],
-                  )
+                  ),
                 ],
               ),
             ),
@@ -127,8 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   filled: true,
                   fillColor: Colors.grey.shade200,
                   border: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(15),
                     borderSide: BorderSide.none,
                   ),
                 ),
@@ -144,8 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          Colors.grey.shade200,
+                      backgroundColor: Colors.grey.shade200,
                       foregroundColor: Colors.black,
                       elevation: 0,
                     ),
@@ -157,21 +149,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(width: 10),
 
                   DropdownButton<String>(
-                    value: selectedSort == "None"
-                        ? null
-                        : selectedSort,
+                    value: selectedSort == "None" ? null : selectedSort,
                     hint: const Text("Sort By"),
                     items: const [
                       DropdownMenuItem(
-                          value:
-                              "Salary: Low to High",
-                          child: Text(
-                              "Salary: Low to High")),
+                        value: "Salary: Low to High",
+                        child: Text("Salary: Low to High"),
+                      ),
                       DropdownMenuItem(
-                          value:
-                              "Salary: High to Low",
-                          child: Text(
-                              "Salary: High to Low")),
+                        value: "Salary: High to Low",
+                        child: Text("Salary: High to Low"),
+                      ),
                     ],
                     onChanged: (value) {
                       setState(() {
@@ -188,8 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
             // JOB LIST
             Expanded(
               child: ListView.builder(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: filteredJobs.length,
                 itemBuilder: (context, index) {
                   return _jobCard(filteredJobs[index]);
@@ -201,85 +188,75 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
 
       // BOTTOM NAVIGATION
-      bottomNavigationBar:BottomNavigationBar(
+      bottomNavigationBar: BottomNavigationBar(
         currentIndex: currentIndex,
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
-        selectedItemColor:
-            const Color(0xFFFFB544),
+        selectedItemColor: const Color(0xFFFFB544),
         unselectedItemColor: Colors.grey,
-        selectedLabelStyle: const TextStyle(
-            fontWeight: FontWeight.w600),
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
         showUnselectedLabels: true,
         onTap: (index) {
-          if(index==1) {
+          if (index == 1) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder:(context)=>SavedScreen())
+              MaterialPageRoute(builder: (context) => SavedScreen()),
             );
-          }else{
-            setState((){currentIndex=index;
-          });
-            
+          } else {
+            setState(() {
+              currentIndex = index;
+            });
           }
         },
         items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: "Home"),
+            icon: Icon(Icons.favorite_border),
+            label: "Saved",
+          ),
           BottomNavigationBarItem(
-              icon:
-                  Icon(Icons.favorite_border),
-              label: "Saved"),
+            icon: Icon(Icons.add_circle, size: 35),
+            label: "",
+          ),
           BottomNavigationBarItem(
-              icon:
-                  Icon(Icons.add_circle,
-                      size: 35),
-              label: ""),
+            icon: Icon(Icons.chat_bubble_outline),
+            label: "Chat",
+          ),
           BottomNavigationBarItem(
-              icon: Icon(
-                  Icons.chat_bubble_outline),
-              label: "Chat"),
-          BottomNavigationBarItem(
-              icon:
-                  Icon(Icons.person_outline),
-              label: "Profile"),
+            icon: Icon(Icons.person_outline),
+            label: "Profile",
+          ),
         ],
       ),
     );
   }
 
-  Widget _jobCard(Map job) {
+  Widget _jobCard(Map<String,dynamic> job) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFFFFE7BF),
-        borderRadius:
-            BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius:
-                      BorderRadius.circular(
-                          8),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(job["type"],
-                    style: const TextStyle(
-                        fontWeight:
-                            FontWeight.bold,
-                        fontSize: 12)),
+                child: Text(
+                  job["type"],
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
               ),
               const SizedBox(width: 8),
               Text(job["time"]),
@@ -287,24 +264,21 @@ class _HomeScreenState extends State<HomeScreen> {
               Text(
                 "₹${job["salary"]}",
                 style: const TextStyle(
-                    fontWeight:
-                        FontWeight.bold,
-                    fontSize: 16),
-              )
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 10),
-          Text(job["title"],
-              style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight:
-                      FontWeight.bold)),
+          Text(
+            job["title"],
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(Icons.location_on,
-                  size: 16,
-                  color: Colors.grey),
+              const Icon(Icons.location_on, size: 16, color: Colors.grey),
               const SizedBox(width: 4),
               Text(job["location"]),
             ],
@@ -315,17 +289,21 @@ class _HomeScreenState extends State<HomeScreen> {
               Text(job["date"]),
               const Spacer(),
               ElevatedButton(
-                style:
-                    ElevatedButton.styleFrom(
-                  backgroundColor:
-                      const Color(
-                          0xFFFFB544),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFFB544),
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => JobDetailsScreen(job:job),
+                    ),
+                  );
+                },
                 child: const Text("View"),
-              )
+              ),
             ],
-          )
+          ),
         ],
       ),
     );
@@ -336,19 +314,14 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title:
-              const Text("Filter by Type"),
+          title: const Text("Filter by Type"),
           content: Column(
-            mainAxisSize:
-                MainAxisSize.min,
+            mainAxisSize: MainAxisSize.min,
             children: [
               _filterOption("All"),
-              _filterOption(
-                  "FULL-TIME"),
-              _filterOption(
-                  "CONTRACT"),
-              _filterOption(
-                  "PART-TIME"),
+              _filterOption("FULL-TIME"),
+              _filterOption("CONTRACT"),
+              _filterOption("PART-TIME"),
             ],
           ),
         );
@@ -368,6 +341,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
-
-

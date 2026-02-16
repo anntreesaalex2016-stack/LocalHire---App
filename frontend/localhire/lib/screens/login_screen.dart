@@ -1,32 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:localhire/screens/mobile_no.dart';
-import 'login_screen.dart';
+import 'package:localhire/screens/signup_screen.dart';
 
-class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _usernameController =
       TextEditingController();
   final TextEditingController _passwordController =
       TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
 
   bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -40,7 +35,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         leading: const Icon(Icons.arrow_back, color: Colors.black),
         centerTitle: true,
         title: const Text(
-          "Sign Up",
+          "Log In",
           style: TextStyle(color: Colors.black),
         ),
       ),
@@ -55,7 +50,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               const SizedBox(height: 20),
 
               const Text(
-                "Create your Account",
+                "Welcome Back",
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w700,
@@ -65,7 +60,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               const SizedBox(height: 6),
 
               const Text(
-                "Start connecting with opportunities today.",
+                "Sign in to continue",
                 style: TextStyle(
                   fontSize: 14,
                   color: Color(0xFF8E8E8E),
@@ -91,7 +86,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               _label("Password"),
               _passwordField(
                 controller: _passwordController,
-                hint: "Min. 8 characters",
+                hint: "Enter your password",
                 obscure: _obscurePassword,
                 onToggle: () {
                   setState(() {
@@ -102,66 +97,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   if (value == null || value.isEmpty) {
                     return "Password is required";
                   }
-                  if (value.length < 8) {
-                    return "Password must be at least 8 characters";
-                  }
                   return null;
                 },
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 8),
 
-              _label("Confirm Password"),
-              _passwordField(
-                controller: _confirmPasswordController,
-                hint: "Re-enter password",
-                obscure: _obscureConfirmPassword,
-                onToggle: () {
-                  setState(() {
-                    _obscureConfirmPassword =
-                        !_obscureConfirmPassword;
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Please confirm your password";
-                  }
-                  if (value != _passwordController.text) {
-                    return "Passwords do not match";
-                  }
-                  return null;
-                },
-              ),
-
-              const SizedBox(height: 24),
-
-              RichText(
-                text: TextSpan(
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF8E8E8E),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  "Forgot Password?",
+                  style: TextStyle(
+                    color: Colors.orange.shade600,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
                   ),
-                  children: [
-                    const TextSpan(
-                        text:
-                            "By clicking Sign Up, you agree to LocalHire's "),
-                    TextSpan(
-                      text: "Terms of Service",
-                      style: TextStyle(
-                        color: Colors.orange.shade600,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const TextSpan(text: " and "),
-                    TextSpan(
-                      text: "Privacy Policy",
-                      style: TextStyle(
-                        color: Colors.orange.shade600,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const TextSpan(text: "."),
-                  ],
                 ),
               ),
 
@@ -173,13 +123,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const MobileNumberScreen(),
-                        ),
-                      );
+                      // TODO: Login Logic
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -190,7 +134,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                   ),
                   child: const Text(
-                    "Sign Up",
+                    "Log In",
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -202,37 +146,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
               const SizedBox(height: 20),
 
-             Center(
-  child: GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const LoginScreen(),
-        ),
-      );
-    },
-    child: RichText(
-      text: TextSpan(
-        style: const TextStyle(
-          fontSize: 14,
-          color: Color(0xFF8E8E8E),
-        ),
-        children: [
-          const TextSpan(text: "Already have an account? "),
-          TextSpan(
-            text: "Log In",
-            style: TextStyle(
-              color: Colors.orange.shade600,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    ),
-  ),
-),
-
+              Center(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const SignUpScreen(),
+                      ),
+                    );
+                  },
+                  child: RichText(
+                    text: TextSpan(
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF8E8E8E),
+                      ),
+                      children: [
+                        const TextSpan(
+                            text: "Don't have an account? "),
+                        TextSpan(
+                          text: "Sign Up",
+                          style: TextStyle(
+                            color: Colors.orange.shade600,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
 
               const SizedBox(height: 30),
             ],
@@ -295,16 +240,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
           const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        borderSide:
+            const BorderSide(color: Color(0xFFE0E0E0)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide:
             const BorderSide(color: Colors.orange),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.red),
       ),
     );
   }
