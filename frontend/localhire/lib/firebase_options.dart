@@ -17,17 +17,29 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      return web;
+      throw UnsupportedError(
+        'DefaultFirebaseOptions have not been configured for web - '
+        'you can reconfigure this by running the FlutterFire CLI again.',
+      );
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        return ios;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for ios - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.macOS:
-        return macos;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for macos - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.windows:
-        return windows;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for windows - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -40,42 +52,6 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDyqUJK64LsdzR2-OS6uKFBrhxgYHO6AOA',
-    appId: '1:955823943443:web:7c4897a806c0106daef4e6',
-    messagingSenderId: '955823943443',
-    projectId: 'localhire-f3d28',
-    authDomain: 'localhire-f3d28.firebaseapp.com',
-    storageBucket: 'localhire-f3d28.firebasestorage.app',
-  );
-
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCth16gaSgNgZpFboiEnnNGc8bZTZVusU8',
-    appId: '1:955823943443:ios:eb85e9d65d3e65b6aef4e6',
-    messagingSenderId: '955823943443',
-    projectId: 'localhire-f3d28',
-    storageBucket: 'localhire-f3d28.firebasestorage.app',
-    iosBundleId: 'com.example.localhire',
-  );
-
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCth16gaSgNgZpFboiEnnNGc8bZTZVusU8',
-    appId: '1:955823943443:ios:eb85e9d65d3e65b6aef4e6',
-    messagingSenderId: '955823943443',
-    projectId: 'localhire-f3d28',
-    storageBucket: 'localhire-f3d28.firebasestorage.app',
-    iosBundleId: 'com.example.localhire',
-  );
-
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDyqUJK64LsdzR2-OS6uKFBrhxgYHO6AOA',
-    appId: '1:955823943443:web:798bd1751df86321aef4e6',
-    messagingSenderId: '955823943443',
-    projectId: 'localhire-f3d28',
-    authDomain: 'localhire-f3d28.firebaseapp.com',
-    storageBucket: 'localhire-f3d28.firebasestorage.app',
-  );
-
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDMkvaMU-cQ4P34LfQIEh7sOhWDhA3H5Yo',
     appId: '1:955823943443:android:a68cc8e01f998dcfaef4e6',
@@ -83,5 +59,4 @@ class DefaultFirebaseOptions {
     projectId: 'localhire-f3d28',
     storageBucket: 'localhire-f3d28.firebasestorage.app',
   );
-
 }

@@ -2,6 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'home_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:encrypt/encrypt.dart' as encrypt;
+import 'package:path/path.dart' as p;
 
 class CompleteProfileScreen extends StatefulWidget {
   const CompleteProfileScreen({super.key});
@@ -31,7 +36,20 @@ class _CompleteProfileScreenState
   File? _profileImage;
   File? _idImage;
 
+  bool _isLoading = false;
+
   final ImagePicker _picker = ImagePicker();
+
+  // 🔐 Encryption Key (for project use only)
+  final _key =
+      encrypt.Key.fromUtf8('12345678901234567890123456789012');
+  final _iv = encrypt.IV.fromLength(16);
+
+  String encryptData(String data) {
+    final encrypter = encrypt.Encrypter(encrypt.AES(_key));
+    final encrypted = encrypter.encrypt(data, iv: _iv);
+    return encrypted.base64;
+  }
 
   // -------- IMAGE PICKER --------
 
@@ -57,12 +75,82 @@ class _CompleteProfileScreenState
     }
   }
 
+  // -------- SAVE PROFILE --------
+
+  Future<void> _saveProfile() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("User not logged in")),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Upload Profile Image
+      final profileRef = FirebaseStorage.instance
+          .ref()
+          .child("profile_images")
+          .child(user.uid)
+          .child(p.basename(_profileImage!.path));
+
+      await profileRef.putFile(_profileImage!);
+      final profileUrl = await profileRef.getDownloadURL();
+
+      // Upload ID Image
+      final idRef = FirebaseStorage.instance
+          .ref()
+          .child("id_proofs")
+          .child(user.uid)
+          .child(p.basename(_idImage!.path));
+
+      await idRef.putFile(_idImage!);
+      final idUrl = await idRef.getDownloadURL();
+
+      // Encrypt ID URL
+      final encryptedId = encryptData(idUrl);
+
+      // Save to Firestore
+      await FirebaseFirestore.instance
+          .collection("users")
+          .doc(user.uid)
+          .set({
+        "name": _nameController.text.trim(),
+        "age": int.parse(_ageController.text.trim()),
+        "gender": _selectedGender,
+        "location": _locationController.text.trim(),
+        "skills": skills,
+        "profileImage": profileUrl,
+        "idProof": encryptedId,
+        "verificationStatus": "pending",
+        "createdAt": Timestamp.now(),
+      });
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const HomeScreen(),
+        ),
+      );
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+
+    setState(() => _isLoading = false);
+  }
+
   // -------- ADD SKILL --------
 
   void _addSkill() {
     String skill = _skillController.text.trim();
 
-    if (skill.isNotEmpty) {
+    if (skill.isNotEmpty && !skills.contains(skill)) {
       setState(() {
         skills.add(skill);
         _skillController.clear();
@@ -242,88 +330,89 @@ class _CompleteProfileScreenState
                 "ID VERIFICATION",
                 style: TextStyle(
                     fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color.fromARGB(255, 0, 0, 0)),
+                    fontWeight: FontWeight.w600),
               ),
 
               const SizedBox(height: 10),
 
               GestureDetector(
-  onTap: _pickIdImage,
-  child: Container(
-    width: double.infinity, // 🔥 increased width
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      border: Border.all(
-        color: const Color(0xFFE0E0E0),
-      ),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Stack(
-      children: [
-
-        // Main Content
-        Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _idImage != null
-                  ? Image.file(
-                      _idImage!,
-                      height: 120,
-                      fit: BoxFit.cover,
-                    )
-                  : const Icon(
-                      Icons.badge_outlined,
-                      size: 40,
-                      color: Colors.grey,
+                onTap: _pickIdImage,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: const Color(0xFFE0E0E0),
                     ),
-              const SizedBox(height: 10),
-              const Text(
-                "Upload any government-issued ID",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: Column(
+                          mainAxisSize:
+                              MainAxisSize.min,
+                          children: [
+                            _idImage != null
+                                ? Image.file(
+                                    _idImage!,
+                                    height: 120,
+                                    fit: BoxFit.cover,
+                                  )
+                                : const Icon(
+                                    Icons.badge_outlined,
+                                    size: 40,
+                                    color: Colors.grey,
+                                  ),
+                            const SizedBox(height: 10),
+                            const Text(
+                              "Upload any government-issued ID",
+                              textAlign:
+                                  TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (_idImage != null)
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _idImage = null;
+                              });
+                            },
+                            child: Container(
+                              decoration:
+                                  const BoxDecoration(
+                                color: Colors.black,
+                                shape:
+                                    BoxShape.circle,
+                              ),
+                              padding:
+                                  const EdgeInsets.all(
+                                      4),
+                              child: const Icon(
+                                Icons.close,
+                                size: 16,
+                                color:
+                                    Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
-            ],
-          ),
-        ),
-
-        // ❌ Remove Button (Top Right)
-        if (_idImage != null)
-          Positioned(
-            top: 0,
-            right: 0,
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  _idImage = null;
-                });
-              },
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Color.fromARGB(255, 0, 0, 0),
-                  shape: BoxShape.circle,
-                ),
-                padding: const EdgeInsets.all(4),
-                child: const Icon(
-                  Icons.close,
-                  size: 16,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-      ],
-    ),
-  ),
-),
 
               const SizedBox(height: 30),
 
-              // ---------- SKILLS ----------
               const Text(
                 "ADD SKILLS",
                 style: TextStyle(
@@ -340,9 +429,10 @@ class _CompleteProfileScreenState
                     .map(
                       (skill) => Chip(
                         label: Text(skill),
-                        deleteIcon: const Icon(
-                            Icons.close,
-                            size: 18),
+                        deleteIcon:
+                            const Icon(
+                                Icons.close,
+                                size: 18),
                         onDeleted: () {
                           setState(() {
                             skills.remove(skill);
@@ -372,8 +462,10 @@ class _CompleteProfileScreenState
                     backgroundColor:
                         const Color(0xFFF5B544),
                     child: IconButton(
-                      icon: const Icon(Icons.add,
-                          color: Colors.white),
+                      icon: const Icon(
+                          Icons.add,
+                          color:
+                              Colors.white),
                       onPressed: _addSkill,
                     ),
                   )
@@ -386,49 +478,56 @@ class _CompleteProfileScreenState
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
-                    if (_formKey
-                        .currentState!
-                        .validate()) {
+                  onPressed: _isLoading
+                      ? null
+                      : () {
+                          if (_formKey
+                              .currentState!
+                              .validate()) {
 
-                      if (_profileImage ==
-                              null ||
-                          _idImage ==
-                              null) {
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(
-                          const SnackBar(
-                              content: Text(
-                                  "Photo and ID required")),
-                        );
-                        return;
-                      }
-Navigator.pushReplacement(
-  context,
-  MaterialPageRoute(
-    builder: (context) => const HomeScreen(),
-  ),
-);
+                            if (_profileImage ==
+                                    null ||
+                                _idImage ==
+                                    null) {
+                              ScaffoldMessenger.of(
+                                      context)
+                                  .showSnackBar(
+                                const SnackBar(
+                                    content: Text(
+                                        "Photo and ID required")),
+                              );
+                              return;
+                            }
 
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
+                            _saveProfile();
+                          }
+                        },
+                  style:
+                      ElevatedButton.styleFrom(
                     backgroundColor:
-                        const Color(0xFFF5B544),
+                        const Color(
+                            0xFFF5B544),
                     shape:
                         RoundedRectangleBorder(
                       borderRadius:
-                          BorderRadius.circular(12),
+                          BorderRadius.circular(
+                              12),
                     ),
                   ),
-                  child: const Text(
-                    "Save & Continue",
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight:
-                            FontWeight.w600,
-                        color: Colors.black),
-                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(
+                          color:
+                              Colors.black)
+                      : const Text(
+                          "Save & Continue",
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight:
+                                  FontWeight
+                                      .w600,
+                              color:
+                                  Colors.black),
+                        ),
                 ),
               ),
 
@@ -471,7 +570,8 @@ Navigator.pushReplacement(
           const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 14),
-      enabledBorder: OutlineInputBorder(
+      enabledBorder:
+          OutlineInputBorder(
         borderRadius:
             BorderRadius.circular(12),
         borderSide:
