@@ -23,11 +23,13 @@ class LocalHireApp extends StatelessWidget {
       title: 'LocalHire',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFF5B544),
+          seedColor: const Color(0xFFFFB544),
         ),
         useMaterial3: true,
       ),
-      home: const SignUpScreen(),
+
+      home:const SignUpScreen()
+      
     );
   }
 }

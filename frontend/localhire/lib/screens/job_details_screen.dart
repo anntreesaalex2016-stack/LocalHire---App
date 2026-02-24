@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'apply_screen.dart';
+import 'job_profile_screen.dart';
 
 class JobDetailsScreen extends StatelessWidget {
   final Map<String, dynamic> job;
@@ -31,7 +32,70 @@ class JobDetailsScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 15),
+
+            /// ---------------- POSTED BY SECTION ----------------
+
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const JobProfileScreen(),
+                    // Replace Placeholder() with ProfileScreen()
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Row(
+                  children: [
+
+                    /// Profile Picture
+                    CircleAvatar(
+                      radius: 25,
+                      backgroundImage: NetworkImage(
+                        job["postedByImage"] ??
+                            "https://i.pravatar.cc/150?img=5",
+                      ),
+                    ),
+
+                    const SizedBox(width: 15),
+
+                    /// Name Section
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "POSTED BY",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          job["postedByName"] ?? "Rahul Sharma",
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const Spacer(),
+                    const Icon(Icons.arrow_forward_ios, size: 16)
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 15),
 
             Text(
               job["type"] ?? "",
@@ -61,7 +125,11 @@ class JobDetailsScreen extends StatelessWidget {
                   ),
                 ),
                 onPressed: () {
-                  Navigator.push(context,MaterialPageRoute(builder:(context)=>const ApplyScreen()),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ApplyScreen(),
+                    ),
                   );
                 },
                 child: const Text(
