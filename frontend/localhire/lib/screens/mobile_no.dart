@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'otp_verification.dart';
+import '../services/auth_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MobileNumberScreen extends StatefulWidget {
-  const MobileNumberScreen({super.key});
+
+  final String username;
+  final String password;
+
+  const MobileNumberScreen({
+    super.key,
+    required this.username,
+    required this.password,
+  });
 
   @override
   State<MobileNumberScreen> createState() => _MobileNumberScreenState();
@@ -15,6 +25,10 @@ class _MobileNumberScreenState extends State<MobileNumberScreen> {
   final TextEditingController _countryCodeController =
       TextEditingController(text: "+91");
   final TextEditingController _phoneController = TextEditingController();
+
+  final AuthService _authService = AuthService();
+
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -49,7 +63,6 @@ class _MobileNumberScreenState extends State<MobileNumberScreen> {
             children: [
               const SizedBox(height: 20),
 
-              // Icon
               Container(
                 height: 72,
                 width: 72,
@@ -103,7 +116,6 @@ class _MobileNumberScreenState extends State<MobileNumberScreen> {
 
               Row(
                 children: [
-                  // Country Code
                   SizedBox(
                     width: 80,
                     child: TextFormField(
@@ -126,7 +138,6 @@ class _MobileNumberScreenState extends State<MobileNumberScreen> {
 
                   const SizedBox(width: 12),
 
-                  // Phone Number
                   Expanded(
                     child: TextFormField(
                       controller: _phoneController,
@@ -135,9 +146,7 @@ class _MobileNumberScreenState extends State<MobileNumberScreen> {
                       inputFormatters: [
                         FilteringTextInputFormatter.digitsOnly,
                       ],
-                      decoration: _inputDecoration(
-                        hintText: "",
-                      ),
+                      decoration: _inputDecoration(),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return "Mobile number is required";
@@ -154,12 +163,11 @@ class _MobileNumberScreenState extends State<MobileNumberScreen> {
 
               const SizedBox(height: 30),
 
-              // Request OTP Button
               SizedBox(
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: _requestOtp,
+                  onPressed: _isLoading ? null : _requestOtp,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFF5B544),
                     elevation: 0,
@@ -167,64 +175,22 @@ class _MobileNumberScreenState extends State<MobileNumberScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text(
-                    "Request OTP",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              const Text(
-                "New to LocalHire?",
-                style: TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-
-              const SizedBox(height: 6),
-
-              Text(
-                "Create an Account",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.orange.shade600,
+                  child: _isLoading
+                      ? const CircularProgressIndicator(
+                          color: Colors.black,
+                        )
+                      : const Text(
+                          "Request OTP",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
+                        ),
                 ),
               ),
 
               const Spacer(),
-
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: RichText(
-                  textAlign: TextAlign.center,
-                  text: TextSpan(
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    children: [
-                      const TextSpan(
-                        text: "By continuing, you agree to our\n",
-                      ),
-                      TextSpan(
-                        text: "Terms and Conditions",
-                        style: TextStyle(
-                          color: Colors.orange.shade600,
-                        ),
-                      ),
-                      const TextSpan(text: " and "),
-                      TextSpan(
-                        text: "Privacy Policy",
-                        style: TextStyle(
-                          color: Colors.orange.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ],
           ),
         ),
@@ -255,20 +221,63 @@ class _MobileNumberScreenState extends State<MobileNumberScreen> {
     );
   }
 
-  void _requestOtp() {
+  void _requestOtp() async {
   if (_formKey.currentState!.validate()) {
+
+    setState(() => _isLoading = true);
+
     final phone =
         "${_countryCodeController.text}${_phoneController.text}";
 
-    debugPrint("Requesting OTP for $phone");
+    try {
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => OtpVerificationScreen(phoneNumber: phone),
-      ),
-    );
+      // 🔎 STEP 1: Check if phone already exists in Firestore
+      var result = await FirebaseFirestore.instance
+          .collection('users')
+          .where('phone', isEqualTo: phone)
+          .get();
+
+      if (result.docs.isNotEmpty) {
+        // Phone already registered
+        setState(() => _isLoading = false);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                "This phone number is already registered. Please login instead."),
+          ),
+        );
+        return;
+      }
+
+      // 🔐 STEP 2: If phone is unique → Send OTP
+      await _authService.sendOTP(
+        phone: phone,
+        onCodeSent: (verificationId) {
+
+          setState(() => _isLoading = false);
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OtpVerificationScreen(
+                verificationId: verificationId,
+                username: widget.username,
+                password: widget.password,
+                phone: phone,
+              ),
+            ),
+          );
+        },
+      );
+
+    } catch (e) {
+      setState(() => _isLoading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
   }
 }
-
 }

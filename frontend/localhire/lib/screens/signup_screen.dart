@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:localhire/screens/mobile_no.dart';
 import 'login_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -133,55 +134,45 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 },
               ),
 
-              const SizedBox(height: 24),
-
-              RichText(
-                text: TextSpan(
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF8E8E8E),
-                  ),
-                  children: [
-                    const TextSpan(
-                        text:
-                            "By clicking Sign Up, you agree to LocalHire's "),
-                    TextSpan(
-                      text: "Terms of Service",
-                      style: TextStyle(
-                        color: Colors.orange.shade600,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const TextSpan(text: " and "),
-                    TextSpan(
-                      text: "Privacy Policy",
-                      style: TextStyle(
-                        color: Colors.orange.shade600,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const TextSpan(text: "."),
-                  ],
-                ),
-              ),
-
               const SizedBox(height: 30),
 
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const MobileNumberScreen(),
-                        ),
-                      );
-                    }
-                  },
+                 onPressed: () async {
+  if (_formKey.currentState!.validate()) {
+
+    String username = _usernameController.text.trim();
+
+    // 🔎 Check if username already exists
+    var result = await FirebaseFirestore.instance
+        .collection('users')
+        .where('username', isEqualTo: username)
+        .get();
+
+    if (result.docs.isNotEmpty) {
+      // Username already exists
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Username already exists. Please login or use another username."),
+        ),
+      );
+      return;
+    }
+
+    // If username is unique → go to phone screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MobileNumberScreen(
+          username: username,
+          password: _passwordController.text.trim(),
+        ),
+      ),
+    );
+  }
+},
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFF5B544),
                     elevation: 0,
@@ -202,37 +193,37 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
               const SizedBox(height: 20),
 
-             Center(
-  child: GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const LoginScreen(),
-        ),
-      );
-    },
-    child: RichText(
-      text: TextSpan(
-        style: const TextStyle(
-          fontSize: 14,
-          color: Color(0xFF8E8E8E),
-        ),
-        children: [
-          const TextSpan(text: "Already have an account? "),
-          TextSpan(
-            text: "Log In",
-            style: TextStyle(
-              color: Colors.orange.shade600,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    ),
-  ),
-),
-
+              Center(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LoginScreen(),
+                      ),
+                    );
+                  },
+                  child: RichText(
+                    text: TextSpan(
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF8E8E8E),
+                      ),
+                      children: [
+                        const TextSpan(
+                            text: "Already have an account? "),
+                        TextSpan(
+                          text: "Log In",
+                          style: TextStyle(
+                            color: Colors.orange.shade600,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
 
               const SizedBox(height: 30),
             ],
@@ -295,7 +286,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
           const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        borderSide:
+            const BorderSide(color: Color(0xFFE0E0E0)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -304,7 +296,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.red),
+        borderSide:
+            const BorderSide(color: Colors.red),
       ),
     );
   }
