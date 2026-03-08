@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-import 'home_screen.dart';   // Make sure this exists
+import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -39,15 +39,12 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
-
-        // ✅ Back arrow functional
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             Navigator.pop(context);
           },
         ),
-
         centerTitle: true,
         title: const Text(
           "Log In",
@@ -85,7 +82,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 30),
 
-              // Username
               const Text(
                 "Username",
                 style: TextStyle(
@@ -109,7 +105,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 20),
 
-              // Password
               const Text(
                 "Password",
                 style: TextStyle(
@@ -212,28 +207,42 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    bool success = await _authService.loginUser(
-      username: _usernameController.text.trim(),
-      password: _passwordController.text.trim(),
-    );
+    try {
 
-    setState(() => _isLoading = false);
-
-    if (success) {
-
-      // ✅ Redirect to HomePage
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+      String? userId = await _authService.loginUser(
+        username: _usernameController.text.trim(),
+        password: _passwordController.text.trim(),
       );
 
-    } else {
+      if (!mounted) return;
+
+      setState(() => _isLoading = false);
+
+      if (userId != null) {
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomeScreen(userId: userId),
+          ),
+        );
+
+      } else {
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Invalid username or password"),
+          ),
+        );
+      }
+
+    } catch (e) {
+
+      setState(() => _isLoading = false);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Invalid username or password"),
+          content: Text("Something went wrong"),
         ),
       );
     }

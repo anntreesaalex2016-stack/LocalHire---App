@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final String userId;
+
+  const ProfileScreen({super.key, required this.userId});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -19,9 +20,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final Color lightCream = const Color(0xFFFFE7BF);
   final Color localRed = const Color(0xFFE53935);
 
-List<Map<String, dynamic>> reviews = [];
-double averageRating = 0.0;
-bool reviewLoading = true;
+  List<Map<String, dynamic>> reviews = [];
+  double averageRating = 0.0;
+  bool reviewLoading = true;
 
   Map<String, dynamic>? userData;
   bool isLoading = true;
@@ -34,50 +35,61 @@ bool reviewLoading = true;
   }
 
   Future<void> fetchUserData() async {
-    final user = FirebaseAuth.instance.currentUser;
 
-    if (user != null) {
-      final doc = await FirebaseFirestore.instance
-          .collection("users")
-          .doc(user.uid)
-          .get();
+    final doc = await FirebaseFirestore.instance
+        .collection("users")
+        .doc(widget.userId)
+        .get();
 
-      if (doc.exists) {
-        setState(() {
-          userData = doc.data();
-          isLoading = false;
-        });
-      }
+    if (doc.exists) {
+      setState(() {
+        userData = doc.data();
+        isLoading = false;
+      });
     }
   }
 
   Future<void> fetchReviews() async {
-  final user = FirebaseAuth.instance.currentUser;
+    print("Profile userId: ${widget.userId}");
+   final query = await FirebaseFirestore.instance
+    .collection("reviews")
+    .where("toUserId", isEqualTo: widget.userId)
+    .orderBy("createdAt", descending: true)
+    .limit(3)
+    .get();
+print("Total reviews fetched: ${query.docs.length}");
+    double total = 0;
+    reviews.clear();
 
-  if (user == null) return;
+    for (var doc in query.docs) {
 
-  final query = await FirebaseFirestore.instance
-      .collection("reviews")
-      .where("toUserId", isEqualTo: user.uid)
-      .get();
-
-  double total = 0;
-  reviews.clear();
-
-  for (var doc in query.docs) {
     final data = doc.data();
-    reviews.add(data);
+
+    // fetch reviewer name
+    final userDoc = await FirebaseFirestore.instance
+        .collection("users")
+        .doc(data["fromUserId"])
+        .get();
+
+    final reviewerName = userDoc.data()?["name"] ?? "Anonymous";
+
+    reviews.add({
+      "comment": data["comment"],
+      "rating": data["rating"],
+      "reviewerName": reviewerName
+    });
+
     total += (data["rating"] ?? 0);
   }
 
-  if (reviews.isNotEmpty) {
-    averageRating = total / reviews.length;
-  }
+    if (reviews.isNotEmpty) {
+      averageRating = total / reviews.length;
+    }
 
-  setState(() {
-    reviewLoading = false;
-  });
-}
+    setState(() {
+      reviewLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -97,8 +109,7 @@ bool reviewLoading = true;
     String memberSince = "";
     if (createdAt != null) {
       final date = createdAt.toDate();
-      memberSince =
-          "${date.month}/${date.year}";
+      memberSince = "${date.month}/${date.year}";
     }
 
     return Scaffold(
@@ -149,7 +160,6 @@ bool reviewLoading = true;
                           : null,
                     ),
                   ),
-                  
                 ],
               ),
 
@@ -226,7 +236,6 @@ bool reviewLoading = true;
 
               const SizedBox(height: 30),
 
-              /// ABOUT
               _sectionTitle("About"),
               const SizedBox(height: 8),
               Text(
@@ -274,8 +283,6 @@ bool reviewLoading = true;
       ),
     );
   }
-
-  /// ---------------- HELPERS ----------------
 
   Widget _toggleButton(String text, bool value, IconData icon) {
     final selected = isHiring == value;
@@ -361,12 +368,27 @@ bool reviewLoading = true;
   }
 
   Widget _reviewCard() {
+    if (reviewLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-  if (reviewLoading) {
-    return const Center(child: CircularProgressIndicator());
-  }
+    if (reviews.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+                blurRadius: 6,
+                color: Colors.black12,
+                offset: Offset(0, 2))
+          ],
+          color: Colors.white,
+        ),
+        child: const Text("No reviews yet"),
+      );
+    }
 
-  if (reviews.isEmpty) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -379,56 +401,89 @@ bool reviewLoading = true;
         ],
         color: Colors.white,
       ),
-      child: const Text("No reviews yet"),
-    );
-  }
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            averageRating.toStringAsFixed(1),
+            style: const TextStyle(
+                fontSize: 40,
+                fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 5),
+          Row(
+            children: List.generate(5, (index) {
+              return Icon(
+                index < averageRating.round()
+                    ? Icons.star
+                    : Icons.star_border,
+                color: const Color(0xFFFFB544),
+              );
+            }),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            "${reviews.length} Reviews",
+            style: const TextStyle(color: Colors.grey),
+          ),
+          const SizedBox(height: 15),
+
+...reviews.map((review) {
+
+  final message = review["comment"] ?? "";
+  final rating = review["rating"] ?? 0;
+  final reviewer = review["reviewerName"] ?? "Anonymous";
 
   return Container(
-    padding: const EdgeInsets.all(20),
+    margin: const EdgeInsets.only(top: 10),
+    padding: const EdgeInsets.all(12),
     decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(16),
-      boxShadow: const [
-        BoxShadow(
-            blurRadius: 6,
-            color: Colors.black12,
-            offset: Offset(0, 2))
-      ],
-      color: Colors.white,
+      color: Colors.grey.shade100,
+      borderRadius: BorderRadius.circular(10),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
 
-        Text(
-          averageRating.toStringAsFixed(1),
-          style: const TextStyle(
-              fontSize: 40,
-              fontWeight: FontWeight.bold),
-        ),
-
-        const SizedBox(height: 5),
-
         Row(
-          children: List.generate(5, (index) {
-            return Icon(
-              index < averageRating.round()
-                  ? Icons.star
-                  : Icons.star_border,
-              color: const Color(0xFFFFB544),
-            );
-          }),
+          children: [
+            Text(
+              reviewer,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const Spacer(),
+            Row(
+              children: List.generate(5, (index) {
+                return Icon(
+                  index < rating.round()
+                      ? Icons.star
+                      : Icons.star_border,
+                  size: 16,
+                  color: const Color(0xFFFFB544),
+                );
+              }),
+            )
+          ],
         ),
 
-        const SizedBox(height: 5),
+        const SizedBox(height: 6),
 
         Text(
-          "${reviews.length} Reviews",
-          style: const TextStyle(color: Colors.grey),
+          message,
+          style: const TextStyle(fontSize: 13),
         ),
+
       ],
     ),
   );
-}
+
+}).toList(),
+        ],
+      ),
+    );
+  }
 
   Widget _serviceChip(String text) {
     return Container(
@@ -443,24 +498,41 @@ bool reviewLoading = true;
     );
   }
 
-  Widget _bigButton(String text, Color color) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          padding:
-              const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14)),
-        ),
-        onPressed: () {},
-        child: Text(text,
-            style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-                color:Colors.white,)),
+ Widget _bigButton(String text, Color color) {
+  return SizedBox(
+    width: double.infinity,
+    child: ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14)),
       ),
-    );
-  }
+      onPressed: () async {
+
+        if (text == "LOGOUT") {
+
+          await FirebaseAuth.instance.signOut();
+
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const LoginScreen(),
+            ),
+            (route) => false,
+          );
+        }
+
+      },
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+          color: Colors.white,
+        ),
+      ),
+    ),
+  );
+}
 }
