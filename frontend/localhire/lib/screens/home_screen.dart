@@ -73,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     final matchesType =
                         selectedType == "All" ||
-                            job["type"] == selectedType;
+                            job["jobMode"] == selectedType;
 
                     return matchesSearch && matchesType;
                   }).toList();
@@ -401,9 +401,9 @@ class _HomeScreenState extends State<HomeScreen> {
               MainAxisSize.min,
           children: [
             _filterOption("All"),
-            _filterOption("FULL-TIME"),
-            _filterOption("CONTRACT"),
-            _filterOption("PART-TIME"),
+            _filterOption("INSTANT"),
+            _filterOption("OFFLINE"),
+            _filterOption("ONLINE"),
           ],
         ),
       ),

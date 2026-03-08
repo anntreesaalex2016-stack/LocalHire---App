@@ -15,6 +15,8 @@ class JobData {
   String location = "";
   DateTime? date;
   int budget = 0;
+
+  bool isInstantJob = false; // ✅ Added
 }
 
 class AddJobScreen extends StatefulWidget {
@@ -59,6 +61,21 @@ class _AddJobScreenState extends State<AddJobScreen> {
       Navigator.pop(context);
     }
   }
+
+
+  void submitJob() {
+    debugPrint("====== JOB DATA ======");
+    debugPrint("Title: ${jobData.title}");
+    debugPrint("Description: ${jobData.description}");
+    debugPrint("Location Type: ${jobData.locationType}");
+    debugPrint("Location: ${jobData.location}");
+    debugPrint("Date: ${jobData.date}");
+    debugPrint("Budget: ${jobData.budget}");
+    debugPrint("Instant Job: ${jobData.isInstantJob}"); // ✅ Added
+
+    Navigator.pop(context);
+  }
+
 
   @override
   Widget build(BuildContext context) {
