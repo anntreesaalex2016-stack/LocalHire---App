@@ -4,7 +4,7 @@ import 'job_details_screen.dart';
 import 'add_job/add_job_screen.dart';
 import 'chat_screen.dart';
 import 'notification_screen.dart';
-import 'add_job/add_job_screen.dart'; // ✅ Added
+import 'add_job/add_job_screen.dart';
 import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
