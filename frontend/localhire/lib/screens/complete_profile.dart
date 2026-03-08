@@ -147,7 +147,7 @@ final hashedPassword = authService.hashPassword(widget.password);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
+           builder: (context) => HomeScreen(userId: user.uid),
         ),
       );
 
@@ -298,7 +298,7 @@ final hashedPassword = authService.hashPassword(widget.password);
                       children: [
                         _label("Gender"),
                         DropdownButtonFormField<String>(
-                          value: _selectedGender,
+                          initialValue: _selectedGender,
                           decoration:
                               _inputDecoration(
                                   "Select"),
