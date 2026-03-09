@@ -71,9 +71,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         .toLowerCase()
                         .contains(searchText.toLowerCase());
 
-                    final matchesType =
-                        selectedType == "All" ||
-                            job["jobMode"] == selectedType;
+                    final isInstant = job["isInstantJob"] ?? false;
+final type = job["type"] ?? "";
+
+final matchesType =
+    selectedType == "All" ||
+    (selectedType == "INSTANT" && isInstant) ||
+    (selectedType == "OFFLINE" && type == "OFFLINE") ||
+    (selectedType == "ONLINE" && type == "ONLINE") ||
+    (selectedType == "INSTANT ONLINE" && isInstant && type == "ONLINE") ||
+    (selectedType == "INSTANT OFFLINE" && isInstant && type == "OFFLINE");
 
                     return matchesSearch && matchesType;
                   }).toList();
@@ -266,10 +273,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
  Widget _jobCard(Map<String, dynamic> job) {
   final String type = job["type"] ?? "N/A";
+  final bool isInstant = job["isInstantJob"]?? false;
   final String title = job["title"] ?? "No Title";
   final String location = job["location"] ?? "No Location";
   final salary = job["salary"] ?? 0;
   final Timestamp? createdAt = job["createdAt"];
+  final String preferredDate = job["date"]?.toString()?? "";
 
   return Container(
     margin: const EdgeInsets.only(bottom: 16),
@@ -290,15 +299,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Text(type),
+              child: Text(isInstant ? "INSTANT $type" :type,),
             ),
             const SizedBox(width: 8),
-            Text(
-              createdAt != null ? _timeAgo(createdAt) : "",
-              style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey),
-            ),
+           Text(
+  createdAt != null ? _timeAgo(createdAt) : "",
+  style: const TextStyle(color: Colors.grey),
+),
             const Spacer(),
             Text(
               "₹$salary",
@@ -325,10 +332,11 @@ class _HomeScreenState extends State<HomeScreen> {
         Row(
           children: [
             Text(
-              createdAt != null ? _formatDate(createdAt) : "",
-              style: const TextStyle(
-                  color: Colors.grey),
-            ),
+  "Preferred: $preferredDate",
+  style: const TextStyle(
+      fontSize: 12,
+      color: Colors.grey),
+),
             const Spacer(),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -401,10 +409,11 @@ class _HomeScreenState extends State<HomeScreen> {
               MainAxisSize.min,
           children: [
             _filterOption("All"),
-            _filterOption("INSTANT"),
             _filterOption("OFFLINE"),
             _filterOption("ONLINE"),
-          ],
+            _filterOption("INSTANT ONLINE"),
+            _filterOption("INSTANT OFFLINE"),
+           ],
         ),
       ),
     );
