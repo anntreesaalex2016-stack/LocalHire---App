@@ -52,16 +52,14 @@ class _CompleteProfileScreenState
   }
 
   Future<void> _pickProfileImage() async {
-    final picked =
-        await _picker.pickImage(source: ImageSource.gallery);
+    final picked = await _picker.pickImage(source: ImageSource.gallery);
     if (picked != null) {
       setState(() => _profileImage = File(picked.path));
     }
   }
 
   Future<void> _pickIdImage() async {
-    final picked =
-        await _picker.pickImage(source: ImageSource.gallery);
+    final picked = await _picker.pickImage(source: ImageSource.gallery);
     if (picked != null) {
       setState(() => _idImage = File(picked.path));
     }
@@ -74,19 +72,22 @@ class _CompleteProfileScreenState
       final authService = AuthService();
       final hashedPassword = authService.hashPassword(widget.password);
 
-      // ✅ Use Firebase Auth UID as Firestore document ID
+      // ✅ YOUR FIX: Use Firebase Auth UID as Firestore document ID
       final firebaseUid = FirebaseAuth.instance.currentUser?.uid;
       if (firebaseUid == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Session expired. Please verify OTP again.")),
+          const SnackBar(
+              content: Text("Session expired. Please verify OTP again.")),
         );
         setState(() => _isLoading = false);
         return;
       }
 
+      // ✅ firebaseUid as doc ID (not .doc() which generates random ID)
       final userDoc = FirebaseFirestore.instance
           .collection("users")
-          .doc();
+          .doc(firebaseUid);
+
       final userId = userDoc.id;
 
       // Upload Profile Image
@@ -143,6 +144,7 @@ class _CompleteProfileScreenState
     setState(() => _isLoading = false);
   }
 
+  // ✅ ELIZABETH: add skill
   void _addSkill() {
     final skill = _skillController.text.trim();
     if (skill.isNotEmpty && !skills.contains(skill)) {
@@ -153,6 +155,7 @@ class _CompleteProfileScreenState
     }
   }
 
+  // ✅ ELIZABETH: remove skill
   void _removeSkill(String skill) {
     setState(() => skills.remove(skill));
   }
@@ -180,7 +183,7 @@ class _CompleteProfileScreenState
             children: [
               const SizedBox(height: 20),
 
-              // Profile Photo
+              // ---------- PROFILE PHOTO ----------
               Center(
                 child: Column(
                   children: [
@@ -190,17 +193,13 @@ class _CompleteProfileScreenState
                         children: [
                           CircleAvatar(
                             radius: 50,
-                            backgroundColor:
-                                const Color(0xFFFFF3DC),
+                            backgroundColor: const Color(0xFFFFF3DC),
                             backgroundImage: _profileImage != null
                                 ? FileImage(_profileImage!)
                                 : null,
                             child: _profileImage == null
-                                ? const Icon(
-                                    Icons.camera_alt_outlined,
-                                    size: 40,
-                                    color: Color(0xFFF5B544),
-                                  )
+                                ? const Icon(Icons.camera_alt_outlined,
+                                    size: 40, color: Color(0xFFF5B544))
                                 : null,
                           ),
                           Positioned(
@@ -208,24 +207,17 @@ class _CompleteProfileScreenState
                             right: 0,
                             child: CircleAvatar(
                               radius: 16,
-                              backgroundColor:
-                                  const Color(0xFFF5B544),
-                              child: const Icon(
-                                Icons.edit,
-                                size: 16,
-                                color: Colors.white,
-                              ),
+                              backgroundColor: const Color(0xFFF5B544),
+                              child: const Icon(Icons.edit,
+                                  size: 16, color: Colors.white),
                             ),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      "Upload Photo",
-                      style:
-                          TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
+                    const Text("Upload Photo",
+                        style: TextStyle(fontSize: 14, color: Colors.grey)),
                   ],
                 ),
               ),
@@ -302,11 +294,10 @@ class _CompleteProfileScreenState
 
               const SizedBox(height: 30),
 
-              // ---------- ID VERIFICATION ----------
+              // ---------- ID VERIFICATION (Elizabeth's improved UI) ----------
               const Text(
                 "ID VERIFICATION",
-                style: TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
               ),
 
               const SizedBox(height: 10),
@@ -332,8 +323,7 @@ class _CompleteProfileScreenState
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   ClipRRect(
-                                    borderRadius:
-                                        BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(8),
                                     child: Image.file(
                                       _idImage!,
                                       height: 120,
@@ -344,8 +334,7 @@ class _CompleteProfileScreenState
                                   const Text(
                                     "Tap to change",
                                     style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey),
+                                        fontSize: 12, color: Colors.grey),
                                   ),
                                 ],
                               ),
@@ -362,11 +351,8 @@ class _CompleteProfileScreenState
                                     shape: BoxShape.circle,
                                   ),
                                   padding: const EdgeInsets.all(4),
-                                  child: const Icon(
-                                    Icons.close,
-                                    size: 16,
-                                    color: Colors.white,
-                                  ),
+                                  child: const Icon(Icons.close,
+                                      size: 16, color: Colors.white),
                                 ),
                               ),
                             ),
@@ -388,12 +374,10 @@ class _CompleteProfileScreenState
                             OutlinedButton.icon(
                               onPressed: _pickIdImage,
                               icon: const Icon(Icons.upload,
-                                  size: 16,
-                                  color: Color(0xFFF5B544)),
+                                  size: 16, color: Color(0xFFF5B544)),
                               label: const Text(
                                 "Upload ID",
-                                style: TextStyle(
-                                    color: Color(0xFFF5B544)),
+                                style: TextStyle(color: Color(0xFFF5B544)),
                               ),
                               style: OutlinedButton.styleFrom(
                                 side: const BorderSide(
@@ -410,16 +394,14 @@ class _CompleteProfileScreenState
 
               const SizedBox(height: 30),
 
-              // ---------- ADD SKILLS ----------
+              // ---------- ADD SKILLS (Elizabeth's improved UI) ----------
               const Text(
                 "ADD SKILLS",
-                style: TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
               ),
 
               const SizedBox(height: 10),
 
-              // Skill chips
               if (skills.isNotEmpty) ...[
                 Wrap(
                   spacing: 8,
@@ -431,16 +413,14 @@ class _CompleteProfileScreenState
                 const SizedBox(height: 12),
               ],
 
-              // Skill input row
               Row(
                 children: [
                   Expanded(
                     child: TextFormField(
                       controller: _skillController,
-                      textCapitalization:
-                          TextCapitalization.words,
-                      decoration: _inputDecoration(
-                          "Type a skill and press enter"),
+                      textCapitalization: TextCapitalization.words,
+                      decoration:
+                          _inputDecoration("Type a skill and press enter"),
                       onFieldSubmitted: (_) => _addSkill(),
                     ),
                   ),
@@ -454,8 +434,7 @@ class _CompleteProfileScreenState
                         color: Color(0xFFF5B544),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.add,
-                          color: Colors.white),
+                      child: const Icon(Icons.add, color: Colors.white),
                     ),
                   ),
                 ],
@@ -465,8 +444,7 @@ class _CompleteProfileScreenState
 
               const Text(
                 "e.g. Plumbing, Electrician, Painting, Carpentry",
-                style:
-                    TextStyle(fontSize: 12, color: Colors.grey),
+                style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
 
               const SizedBox(height: 30),
@@ -480,10 +458,8 @@ class _CompleteProfileScreenState
                       ? null
                       : () {
                           if (_formKey.currentState!.validate()) {
-                            if (_profileImage == null ||
-                                _idImage == null) {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(
+                            if (_profileImage == null || _idImage == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                     content:
                                         Text("Photo and ID required")),
@@ -496,8 +472,7 @@ class _CompleteProfileScreenState
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFF5B544),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.black)
@@ -505,8 +480,7 @@ class _CompleteProfileScreenState
                           style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Colors.black),
-                        ),
+                              color: Colors.black)),
                 ),
               ),
 
@@ -518,11 +492,10 @@ class _CompleteProfileScreenState
     );
   }
 
-  // Skill chip with remove button
+  // ✅ ELIZABETH: skill chip with remove button
   Widget _skillChip(String skill) {
     return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: const Color(0xFFFFF3DC),
         borderRadius: BorderRadius.circular(20),
@@ -531,11 +504,9 @@ class _CompleteProfileScreenState
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            skill,
-            style: const TextStyle(
-                fontSize: 13, fontWeight: FontWeight.w500),
-          ),
+          Text(skill,
+              style: const TextStyle(
+                  fontSize: 13, fontWeight: FontWeight.w500)),
           const SizedBox(width: 6),
           GestureDetector(
             onTap: () => _removeSkill(skill),
@@ -550,11 +521,9 @@ class _CompleteProfileScreenState
   Widget _label(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Text(
-        text,
-        style: const TextStyle(
-            fontSize: 14, fontWeight: FontWeight.w500),
-      ),
+      child: Text(text,
+          style: const TextStyle(
+              fontSize: 14, fontWeight: FontWeight.w500)),
     );
   }
 
@@ -575,8 +544,8 @@ class _CompleteProfileScreenState
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16, vertical: 14),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
