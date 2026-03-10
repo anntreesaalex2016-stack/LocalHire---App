@@ -13,6 +13,7 @@ class JobData {
   String description = "";
   String locationType = "";
   String location = "";
+  bool isInstant = false;
   DateTime? date;
   int budget = 0;
 

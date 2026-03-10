@@ -84,6 +84,10 @@ class Step6 extends StatelessWidget {
                             : jobData.description,
                       ),
                       summaryItem(
+      "Instant Job",
+      jobData.isInstantJob ? "Yes" : "No",
+    ),
+                      summaryItem(
                         "Location",
                         "${jobData.locationType.toUpperCase()} - ${jobData.location}",
                       ),
@@ -124,6 +128,7 @@ class Step6 extends StatelessWidget {
                     "salary": jobData.budget,
                     "date": formatDate(jobData.date),
                     "description": jobData.description,
+                    "isInstantJob":jobData.isInstantJob,
                     "postedBy": userId,
                     "createdAt": FieldValue.serverTimestamp(),
                   });
