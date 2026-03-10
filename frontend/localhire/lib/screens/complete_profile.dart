@@ -27,7 +27,12 @@ class CompleteProfileScreen extends StatefulWidget {
       _CompleteProfileScreenState();
 }
 
+<<<<<<< HEAD
 class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
+=======
+class _CompleteProfileScreenState
+    extends State<CompleteProfileScreen> {
+>>>>>>> 8aee3eb352589c9fedaf03b800019328eabbcfd5
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
@@ -51,6 +56,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   }
 
   Future<void> _pickProfileImage() async {
+<<<<<<< HEAD
     final picked = await _picker.pickImage(source: ImageSource.gallery);
     if (picked != null) setState(() => _profileImage = File(picked.path));
   }
@@ -58,6 +64,21 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   Future<void> _pickIdImage() async {
     final picked = await _picker.pickImage(source: ImageSource.gallery);
     if (picked != null) setState(() => _idImage = File(picked.path));
+=======
+    final picked =
+        await _picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() => _profileImage = File(picked.path));
+    }
+  }
+
+  Future<void> _pickIdImage() async {
+    final picked =
+        await _picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() => _idImage = File(picked.path));
+    }
+>>>>>>> 8aee3eb352589c9fedaf03b800019328eabbcfd5
   }
 
   Future<void> _saveProfile() async {
@@ -79,8 +100,12 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
       final userDoc = FirebaseFirestore.instance
           .collection("users")
+<<<<<<< HEAD
           .doc(firebaseUid); // ✅ Firebase Auth UID = Firestore doc ID
 
+=======
+          .doc();
+>>>>>>> 8aee3eb352589c9fedaf03b800019328eabbcfd5
       final userId = userDoc.id;
 
       // Upload Profile Image
@@ -138,13 +163,21 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   }
 
   void _addSkill() {
+<<<<<<< HEAD
     String skill = _skillController.text.trim();
+=======
+    final skill = _skillController.text.trim();
+>>>>>>> 8aee3eb352589c9fedaf03b800019328eabbcfd5
     if (skill.isNotEmpty && !skills.contains(skill)) {
       setState(() {
         skills.add(skill);
         _skillController.clear();
       });
     }
+  }
+
+  void _removeSkill(String skill) {
+    setState(() => skills.remove(skill));
   }
 
   @override
@@ -180,13 +213,26 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                         children: [
                           CircleAvatar(
                             radius: 50,
+<<<<<<< HEAD
                             backgroundColor: const Color(0xFFFFF3DC),
+=======
+                            backgroundColor:
+                                const Color(0xFFFFF3DC),
+>>>>>>> 8aee3eb352589c9fedaf03b800019328eabbcfd5
                             backgroundImage: _profileImage != null
                                 ? FileImage(_profileImage!)
                                 : null,
                             child: _profileImage == null
+<<<<<<< HEAD
                                 ? const Icon(Icons.camera_alt_outlined,
                                     size: 40, color: Color(0xFFF5B544))
+=======
+                                ? const Icon(
+                                    Icons.camera_alt_outlined,
+                                    size: 40,
+                                    color: Color(0xFFF5B544),
+                                  )
+>>>>>>> 8aee3eb352589c9fedaf03b800019328eabbcfd5
                                 : null,
                           ),
                           Positioned(
@@ -194,32 +240,57 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                             right: 0,
                             child: CircleAvatar(
                               radius: 16,
+<<<<<<< HEAD
                               backgroundColor: const Color(0xFFF5B544),
                               child: const Icon(Icons.edit,
                                   size: 16, color: Colors.white),
+=======
+                              backgroundColor:
+                                  const Color(0xFFF5B544),
+                              child: const Icon(
+                                Icons.edit,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+>>>>>>> 8aee3eb352589c9fedaf03b800019328eabbcfd5
                             ),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 8),
+<<<<<<< HEAD
                     const Text("Upload Photo",
                         style: TextStyle(fontSize: 14, color: Colors.grey)),
+=======
+                    const Text(
+                      "Upload Photo",
+                      style:
+                          TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+>>>>>>> 8aee3eb352589c9fedaf03b800019328eabbcfd5
                   ],
                 ),
               ),
 
               const SizedBox(height: 30),
 
+              // ---------- FULL NAME ----------
               _label("Full Name"),
               _textField(
                 controller: _nameController,
                 hint: "Enter your full name",
+<<<<<<< HEAD
                 validator: (v) => v == null || v.isEmpty ? "Required" : null,
+=======
+                validator: (value) =>
+                    value == null || value.isEmpty ? "Required" : null,
+>>>>>>> 8aee3eb352589c9fedaf03b800019328eabbcfd5
               ),
 
               const SizedBox(height: 20),
 
+              // ---------- AGE & GENDER ----------
               Row(
                 children: [
                   Expanded(
@@ -231,8 +302,15 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                           controller: _ageController,
                           hint: "Ex: 25",
                           keyboardType: TextInputType.number,
+<<<<<<< HEAD
                           validator: (v) =>
                               v == null || v.isEmpty ? "Required" : null,
+=======
+                          validator: (value) =>
+                              value == null || value.isEmpty
+                                  ? "Required"
+                                  : null,
+>>>>>>> 8aee3eb352589c9fedaf03b800019328eabbcfd5
                         ),
                       ],
                     ),
@@ -254,7 +332,12 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                               .toList(),
                           onChanged: (value) =>
                               setState(() => _selectedGender = value),
+<<<<<<< HEAD
                           validator: (v) => v == null ? "Required" : null,
+=======
+                          validator: (value) =>
+                              value == null ? "Required" : null,
+>>>>>>> 8aee3eb352589c9fedaf03b800019328eabbcfd5
                         ),
                       ],
                     ),
@@ -264,19 +347,35 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
               const SizedBox(height: 20),
 
+              // ---------- LOCATION ----------
               _label("Location"),
               _textField(
                 controller: _locationController,
                 hint: "Enter your city",
+<<<<<<< HEAD
                 validator: (v) => v == null || v.isEmpty ? "Required" : null,
+=======
+                validator: (value) =>
+                    value == null || value.isEmpty ? "Required" : null,
+>>>>>>> 8aee3eb352589c9fedaf03b800019328eabbcfd5
               ),
 
               const SizedBox(height: 30),
 
+<<<<<<< HEAD
               // ID Upload
               const Text("ID VERIFICATION",
                   style: TextStyle(
                       fontSize: 13, fontWeight: FontWeight.w600)),
+=======
+              // ---------- ID VERIFICATION ----------
+              const Text(
+                "ID VERIFICATION",
+                style: TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+
+>>>>>>> 8aee3eb352589c9fedaf03b800019328eabbcfd5
               const SizedBox(height: 10),
 
               GestureDetector(
@@ -285,6 +384,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
+<<<<<<< HEAD
                     border: Border.all(color: const Color(0xFFE0E0E0)),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -327,11 +427,163 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                         ),
                     ],
                   ),
+=======
+                    border: Border.all(
+                      color: _idImage != null
+                          ? const Color(0xFFF5B544)
+                          : const Color(0xFFE0E0E0),
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: _idImage != null
+                      ? Stack(
+                          children: [
+                            Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius:
+                                        BorderRadius.circular(8),
+                                    child: Image.file(
+                                      _idImage!,
+                                      height: 120,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    "Tap to change",
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                onTap: () =>
+                                    setState(() => _idImage = null),
+                                child: Container(
+                                  decoration: const BoxDecoration(
+                                    color: Colors.black,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  padding: const EdgeInsets.all(4),
+                                  child: const Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.badge_outlined,
+                                size: 36, color: Colors.grey),
+                            const SizedBox(height: 8),
+                            const Text(
+                              "Upload any government ID for verification",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: 13, color: Colors.grey),
+                            ),
+                            const SizedBox(height: 10),
+                            OutlinedButton.icon(
+                              onPressed: _pickIdImage,
+                              icon: const Icon(Icons.upload,
+                                  size: 16,
+                                  color: Color(0xFFF5B544)),
+                              label: const Text(
+                                "Upload ID",
+                                style: TextStyle(
+                                    color: Color(0xFFF5B544)),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(
+                                    color: Color(0xFFF5B544)),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(8)),
+                              ),
+                            ),
+                          ],
+                        ),
+>>>>>>> 8aee3eb352589c9fedaf03b800019328eabbcfd5
                 ),
               ),
 
               const SizedBox(height: 30),
 
+              // ---------- ADD SKILLS ----------
+              const Text(
+                "ADD SKILLS",
+                style: TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+
+              const SizedBox(height: 10),
+
+              // Skill chips
+              if (skills.isNotEmpty) ...[
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: skills
+                      .map((skill) => _skillChip(skill))
+                      .toList(),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // Skill input row
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _skillController,
+                      textCapitalization:
+                          TextCapitalization.words,
+                      decoration: _inputDecoration(
+                          "Type a skill and press enter"),
+                      onFieldSubmitted: (_) => _addSkill(),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: _addSkill,
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF5B544),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.add,
+                          color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+
+              const Text(
+                "e.g. Plumbing, Electrician, Painting, Carpentry",
+                style:
+                    TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+
+              const SizedBox(height: 30),
+
+              // ---------- SAVE BUTTON ----------
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -340,8 +592,15 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       ? null
                       : () {
                           if (_formKey.currentState!.validate()) {
+<<<<<<< HEAD
                             if (_profileImage == null || _idImage == null) {
                               ScaffoldMessenger.of(context).showSnackBar(
+=======
+                            if (_profileImage == null ||
+                                _idImage == null) {
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(
+>>>>>>> 8aee3eb352589c9fedaf03b800019328eabbcfd5
                                 const SnackBar(
                                     content:
                                         Text("Photo and ID required")),
@@ -354,7 +613,12 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFF5B544),
                     shape: RoundedRectangleBorder(
+<<<<<<< HEAD
                         borderRadius: BorderRadius.circular(12)),
+=======
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+>>>>>>> 8aee3eb352589c9fedaf03b800019328eabbcfd5
                   ),
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.black)
@@ -362,7 +626,12 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                           style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
+<<<<<<< HEAD
                               color: Colors.black)),
+=======
+                              color: Colors.black),
+                        ),
+>>>>>>> 8aee3eb352589c9fedaf03b800019328eabbcfd5
                 ),
               ),
 
@@ -374,8 +643,50 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     );
   }
 
+<<<<<<< HEAD
   Widget _label(String text) => Text(text,
       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500));
+=======
+  // Skill chip with remove button
+  Widget _skillChip(String skill) {
+    return Container(
+      padding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF3DC),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF5B544)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            skill,
+            style: const TextStyle(
+                fontSize: 13, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(width: 6),
+          GestureDetector(
+            onTap: () => _removeSkill(skill),
+            child: const Icon(Icons.close,
+                size: 14, color: Colors.black54),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _label(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Text(
+        text,
+        style: const TextStyle(
+            fontSize: 14, fontWeight: FontWeight.w500),
+      ),
+    );
+  }
+>>>>>>> 8aee3eb352589c9fedaf03b800019328eabbcfd5
 
   Widget _textField({
     required TextEditingController controller,
@@ -394,8 +705,13 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
+<<<<<<< HEAD
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+=======
+      contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16, vertical: 14),
+>>>>>>> 8aee3eb352589c9fedaf03b800019328eabbcfd5
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
