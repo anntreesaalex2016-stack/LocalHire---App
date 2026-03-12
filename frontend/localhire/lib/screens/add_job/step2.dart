@@ -245,7 +245,21 @@ class _Step2State extends State<Step2> {
                     ),
                     elevation: 8,
                   ),
-                  onPressed: widget.onNext,
+                  onPressed: () {
+                    if (_descriptionController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Please enter the job description"),
+                        ),
+                      );
+                      return;
+                    }
+
+                    widget.jobData.description =
+                        _descriptionController.text.trim();
+
+                    widget.onNext();
+                  },
                   child: const Text(
                     "Save & Continue",
                     style: TextStyle(

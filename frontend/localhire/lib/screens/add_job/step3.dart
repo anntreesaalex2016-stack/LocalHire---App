@@ -262,12 +262,17 @@ class _Step3State extends State<Step3> {
             height: 55,
             child: ElevatedButton(
               onPressed: () {
-                widget.jobData
-                    .locationType = selectedMode;
-                widget.jobData
-                        .location =
-                    locationController
-                        .text;
+                if (locationController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Please enter the location"),
+                    ),
+                  );
+                  return;
+                }
+
+                widget.jobData.locationType = selectedMode;
+                widget.jobData.location = locationController.text.trim();
 
                 widget.onNext();
               },

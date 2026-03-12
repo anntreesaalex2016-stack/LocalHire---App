@@ -171,12 +171,21 @@ class _Step5State extends State<Step5> {
             height: 55,
             child: ElevatedButton(
               onPressed: () {
-                widget.jobData.budget =
-                    int.tryParse(
-                            budgetController
-                                .text) ??
-                        0;
+                int? budget =
+                    int.tryParse(budgetController.text);
 
+                if (budget == null || budget <= 0) {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                          "Please enter a valid budget"),
+                    ),
+                  );
+                  return;
+                }
+
+                widget.jobData.budget = budget;
                 widget.onNext();
               },
               style: ElevatedButton

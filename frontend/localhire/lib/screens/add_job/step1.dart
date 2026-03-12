@@ -136,8 +136,16 @@ class _Step1State extends State<Step1> {
             height: 55,
             child: ElevatedButton(
               onPressed: () {
-                widget.jobData.title =
-                    titleController.text;
+                if (titleController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Please enter the service type"),
+                    ),
+                  );
+                  return;
+                }
+
+                widget.jobData.title = titleController.text.trim();
                 widget.onNext();
               },
               style: ElevatedButton.styleFrom(
