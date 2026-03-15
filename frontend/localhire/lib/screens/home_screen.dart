@@ -8,6 +8,7 @@ import 'notification_screen.dart';
 import 'profile_screen.dart';
 import 'location_picker_screen.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userId;
@@ -673,8 +674,16 @@ void _showFilterDialog() {
     final Timestamp? createdAt =
     job["createdAt"];
 
-    final String preferredDate =
-        job["date"]?.toString() ?? "";
+    final dynamic dateValue = job["date"];
+String preferredDate = "";
+
+if (dateValue != null) {
+  if (dateValue is Timestamp) {
+    preferredDate = dateValue.toDate().toLocal().toString().split(' ')[0];
+  } else if (dateValue is String) {
+    preferredDate = dateValue;
+  }
+}
 
     return Container(
 
@@ -785,13 +794,22 @@ void _showFilterDialog() {
                         0xFFFFB544)),
 
                 onPressed: () {
+                  final jobForDetails = {
+    ...job, // copy all fields
+    "date": job["date"] is Timestamp
+        ? (job["date"] as Timestamp).toDate().toLocal().toString().split(' ')[0]
+        : (job["date"] ?? "")
+  };
+                  
+  
 
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) =>
                           JobDetailsScreen(
-                              job: job),
+                              job: jobForDetails),
+                              
                     ),
                   );
 

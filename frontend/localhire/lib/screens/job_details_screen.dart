@@ -18,121 +18,139 @@ class JobDetailsScreen extends StatelessWidget {
         elevation: 0,
       ),
       backgroundColor: const Color(0xFFF5F5F5),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      body: Column(
+        children: [
 
-            /// JOB TITLE
-            Text(
-              job["title"] ?? "No Title",
-              style: const TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+          /// Scrollable content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
 
-            const SizedBox(height: 15),
-
-            /// ---------------- POSTED BY SECTION ----------------
-            FutureBuilder<DocumentSnapshot>(
-              future: FirebaseFirestore.instance
-                  .collection("users")
-                  .doc(job["postedBy"])
-                  .get(),
-              builder: (context, snapshot) {
-
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                var user = snapshot.data!.data() as Map<String, dynamic>;
-
-                String name = user["name"] ?? "User";
-                String image = user["profileImage"] ??
-                    "https://i.pravatar.cc/150?img=5";
-
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => WorkerProfileScreen(
-                          userId: job["postedBy"],
-                        ),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Row(
-                      children: [
-
-                        /// Profile Picture
-                        CircleAvatar(
-                          radius: 25,
-                          backgroundImage: NetworkImage(image),
-                        ),
-
-                        const SizedBox(width: 15),
-
-                        /// Name Section
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "POSTED BY",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              name,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const Spacer(),
-                        const Icon(Icons.arrow_forward_ios, size: 16)
-                      ],
+                  /// JOB TITLE
+                  Text(
+                    job["title"] ?? "No Title",
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                );
-              },
-            ),
 
-            const SizedBox(height: 15),
+                  const SizedBox(height: 15),
 
-            Text(
-              job["type"] ?? "",
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontWeight: FontWeight.w500,
+                  /// ---------------- POSTED BY SECTION ----------------
+                  FutureBuilder<DocumentSnapshot>(
+                    future: FirebaseFirestore.instance
+                        .collection("users")
+                        .doc(job["postedBy"])
+                        .get(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+
+                      var user = snapshot.data!.data() as Map<String, dynamic>;
+
+                      String name = user["name"] ?? "User";
+                      String image = user["profileImage"] ??
+                          "https://i.pravatar.cc/150?img=5";
+
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => WorkerProfileScreen(
+                                userId: job["postedBy"],
+                              ),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Row(
+                            children: [
+
+                              /// Profile Picture
+                              CircleAvatar(
+                                radius: 25,
+                                backgroundImage: NetworkImage(image),
+                              ),
+
+                              const SizedBox(width: 15),
+
+                              /// Name Section
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "POSTED BY",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    name,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const Spacer(),
+                              const Icon(Icons.arrow_forward_ios, size: 16)
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  /// JOB TYPE
+                  Text(
+                    job["type"] ?? "",
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  /// CARDS
+                  _buildCard("Location", job["location"] ?? "Not specified"),
+                  _buildCard("Salary", "₹ ${job["salary"] ?? "0"}"),
+                  _buildCard("Date", job["date"] ?? ""),
+                  _buildCard(
+                    "Posted",
+                    job["createdAt"]!=null && job["createdAt"]is Timestamp
+                        ? _formatTimestamp(job["createdAt"])
+                        :  "not availale",
+                  ),
+                  _buildCard("Description", job["description"] ?? "Not provided"),
+                ],
               ),
             ),
+          ),
 
-            const SizedBox(height: 20),
-
-            _buildCard("Location", job["location"] ?? "Not specified"),
-            _buildCard("Salary", "₹ ${job["salary"] ?? "0"}"),
-            _buildCard("Date", job["date"] ?? ""),
-            _buildCard("Posted", job["time"] ?? ""),
-            _buildCard("Description", job["description"] ?? "Not provided"),
-
-            const Spacer(),
-
-            SizedBox(
+          /// APPLY BUTTON
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -156,12 +174,13 @@ class JobDetailsScreen extends StatelessWidget {
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
+  /// ---------------- BUILD CARD ----------------
   Widget _buildCard(String title, String value) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -172,14 +191,31 @@ class JobDetailsScreen extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start, // top-align for multi-line
         children: [
           Text(
             title,
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-          Text(value),
+          const SizedBox(width: 10),
+
+          /// Flexible allows long text (like Description) to wrap without overflow
+          Flexible(
+            child: Text(
+              value,
+              softWrap: true,
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  /// ---------------- FORMAT TIMESTAMP ----------------
+  String _formatTimestamp(Timestamp timestamp) {
+    final date = timestamp.toDate();
+    return "${date.day.toString().padLeft(2,'0')}-"
+           "${date.month.toString().padLeft(2,'0')}-"
+           "${date.year}";
   }
 }
