@@ -59,11 +59,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
           userLocation = data?["location"] ?? "Unknown";
 
-          GeoPoint geo = data?["locationGeoPoint"];
-          if (geo != null) {
+           final geo = data?["locationGeoPoint"];
+          if (geo != null && geo is GeoPoint) {
             userLat = geo.latitude;
             userLng = geo.longitude;
-          }
+          }         
 
         });
       }
@@ -158,8 +158,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (job["locationGeoPoint"] != null &&
                         userLat != 0) {
 
-                      GeoPoint geo = job["locationGeoPoint"];
-
+                      final geo = job["locationGeoPoint"];
+                       if (geo != null && geo is GeoPoint) {
                       double meters =
                       Geolocator.distanceBetween(
                         userLat,
@@ -172,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       matchesDistance = km <= distance;
                     }
-
+                   }
                     return matchesSearch &&
                         matchesType &&
                         matchesPrice &&

@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'step1.dart';
 import 'step2.dart';
 import 'step3.dart';
@@ -16,17 +16,19 @@ class JobData {
   bool isInstant = false;
   DateTime? date;
   int budget = 0;
+  bool isInstantJob = false;
 
-  bool isInstantJob = false; // ✅ Added
+  // ✅ Location coordinates for distance filtering
+  double lat = 0.0;
+  double lng = 0.0;
 }
 
 class AddJobScreen extends StatefulWidget {
-
-  final String userId; // ✅ ADD THIS
+  final String userId;
 
   const AddJobScreen({
     super.key,
-    required this.userId, // ✅ ADD THIS
+    required this.userId,
   });
 
   @override
@@ -63,20 +65,49 @@ class _AddJobScreenState extends State<AddJobScreen> {
     }
   }
 
-
-  void submitJob() {
+  Future<void> submitJob() async {
     debugPrint("====== JOB DATA ======");
     debugPrint("Title: ${jobData.title}");
     debugPrint("Description: ${jobData.description}");
     debugPrint("Location Type: ${jobData.locationType}");
     debugPrint("Location: ${jobData.location}");
+    debugPrint("Lat: ${jobData.lat}, Lng: ${jobData.lng}");
     debugPrint("Date: ${jobData.date}");
     debugPrint("Budget: ${jobData.budget}");
-    debugPrint("Instant Job: ${jobData.isInstantJob}"); // ✅ Added
+    debugPrint("Instant Job: ${jobData.isInstantJob}");
 
-    Navigator.pop(context);
+    try {
+      await FirebaseFirestore.instance.collection('jobs').add({
+        'title': jobData.title,
+        'description': jobData.description,
+        'locationType': jobData.locationType,
+        'location': jobData.location,
+
+        // ✅ GeoPoint for distance-based filtering
+        'locationGeoPoint': jobData.lat != 0.0 && jobData.lng != 0.0
+            ? GeoPoint(jobData.lat, jobData.lng)
+            : null,
+
+        'date': jobData.date != null
+            ? Timestamp.fromDate(jobData.date!)
+            : null,
+        'budget': jobData.budget,
+        'isInstantJob': jobData.isInstantJob,
+        'employerId': widget.userId,
+        'status': 'open',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      debugPrint("Error saving job: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to post job: $e")),
+        );
+      }
+    }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -101,36 +132,15 @@ class _AddJobScreenState extends State<AddJobScreen> {
         controller: _controller,
         physics: const NeverScrollableScrollPhysics(),
         children: [
-
-          Step1(
-            onNext: nextStep,
-            jobData: jobData,
-          ),
-
-          Step2(
-            onNext: nextStep,
-            jobData: jobData,
-          ),
-
-          Step3(
-            onNext: nextStep,
-            jobData: jobData,
-          ),
-
-          Step4(
-            onNext: nextStep,
-            jobData: jobData,
-          ),
-
-          Step5(
-            onNext: nextStep,
-            jobData: jobData,
-          ),
-
+          Step1(onNext: nextStep, jobData: jobData),
+          Step2(onNext: nextStep, jobData: jobData),
+          Step3(onNext: nextStep, jobData: jobData),
+          Step4(onNext: nextStep, jobData: jobData),
+          Step5(onNext: nextStep, jobData: jobData),
           Step6(
-            onNext: () {},
+            onNext: submitJob,
             jobData: jobData,
-            userId: widget.userId, // ✅ PASS IT CORRECTLY
+            userId: widget.userId,
           ),
         ],
       ),

@@ -18,17 +18,8 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final AuthService _authService = AuthService();
-
   bool isHiring = false;
   bool _sosLoading = false;
-
-  // ── Emergency contacts ──────────────────────────────────────────────────────
-  // Replace these with your real emergency numbers
-  static const List<String> _emergencyNumbers = [
-    '+911234567890',
-    '+919876543210',
-  ];
-  // ────────────────────────────────────────────────────────────────────────────
 
   final Color primaryGold = const Color(0xFFFFB544);
   final Color lightCream = const Color(0xFFFFE7BF);
@@ -244,11 +235,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
           "${position.longitude.toStringAsFixed(5)}\n\n"
           "Please respond immediately!";
 
-      // 4. Send SMS to each emergency number
-      for (final number in _emergencyNumbers) {
-        await _sendSMS(number, smsBody);
-      }
+      // 4. Fetch emergency contacts from userData and send SMS
+final emergencyContacts = List<Map<String, dynamic>>.from(
+  userData?["emergencyContacts"] ?? [],
+);
 
+if (emergencyContacts.isEmpty) {
+  _showSnack("No emergency contacts found. Please add them in your profile.", isError: true);
+  return;
+}
+
+final numbers = emergencyContacts
+    .map((c) => "+91${c["phone"]?.toString().trim() ?? ""}")
+    .where((p) => p.length > 3)
+    .join(";");
+
+await _sendSMS(numbers, smsBody);
       // 5. Log SOS alert in Firestore for admin dashboard
       await _logSOSToFirestore(
         employeeName: employeeName,
@@ -308,16 +310,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return "Not currently on a job";
   }
 
-  Future<void> _sendSMS(String phoneNumber, String body) async {
-    final uri = Uri(
-      scheme: 'sms',
-      path: phoneNumber,
-      queryParameters: {'body': body},
-    );
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    }
+  Future<void> _sendSMS(String phoneNumbers, String body) async {
+  final uri = Uri(
+    scheme: 'sms',
+    path: phoneNumbers,
+    queryParameters: {'body': body},
+  );
+  if (await canLaunchUrl(uri)) {
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
+}
 
   Future<void> _logSOSToFirestore({
     required String employeeName,

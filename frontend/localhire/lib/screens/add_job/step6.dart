@@ -158,6 +158,9 @@ class Step6 extends StatelessWidget {
                     "type": jobData.locationType.toUpperCase(),
                     "title": jobData.title,
                     "location": jobData.location,
+                    "locationGeoPoint": jobData.lat != 0.0 && jobData.lng != 0.0
+                     ? GeoPoint(jobData.lat, jobData.lng)
+                     : null,
                     "salary": jobData.budget,
                     "date": jobData.date,
                     "description": jobData.description,
