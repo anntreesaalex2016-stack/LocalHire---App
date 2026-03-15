@@ -17,21 +17,18 @@ class Step4 extends StatefulWidget {
 
 class _Step4State extends State<Step4> {
   String selectedOption = "date";
-  DateTime selectedDate = DateTime.now();
+  DateTime? selectedDate;
 
   @override
   void initState() {
     super.initState();
-
-    if (widget.jobData.date != null) {
-      selectedDate = widget.jobData.date!;
-    }
+    selectedDate = widget.jobData.date;
   }
 
   Future<void> pickDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: selectedDate,
+      initialDate: selectedDate ?? DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime(2030),
     );
@@ -44,7 +41,10 @@ class _Step4State extends State<Step4> {
   }
 
   String formattedDate() {
-    return "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}";
+    if (selectedDate == null) {
+      return "Select date";
+    }
+    return "${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}";
   }
 
   @override
@@ -153,21 +153,24 @@ class _Step4State extends State<Step4> {
             height: 55,
             child: ElevatedButton(
               onPressed: () {
-                widget.jobData.date =
-                    selectedDate;
+                if (selectedDate == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Please select a date"),
+                    ),
+                  );
+                  return;
+                }
 
+                widget.jobData.date = selectedDate!;
                 widget.onNext();
               },
-              style: ElevatedButton
-                  .styleFrom(
+              style: ElevatedButton.styleFrom(
                 backgroundColor:
-                    const Color(
-                        0xFFF2B84B),
-                shape:
-                    RoundedRectangleBorder(
+                    const Color(0xFFF2B84B),
+                shape: RoundedRectangleBorder(
                   borderRadius:
-                      BorderRadius
-                          .circular(20),
+                      BorderRadius.circular(20),
                 ),
               ),
               child: const Text(
