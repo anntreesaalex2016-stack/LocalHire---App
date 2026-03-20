@@ -15,16 +15,17 @@ class _SavedScreenState extends State<SavedScreen> {
   final ChatService _chatService = ChatService();
   final TextEditingController _searchController = TextEditingController();
 
-  // 0 = Search by Name, 1 = Search by Skill
   int _searchMode = 0;
   String _searchQuery = '';
 
-  late final String _currentUid;@override                         // ← ADD initState block here
+  String? _currentUid; // ✅ FIXED
+
+  @override
   void initState() {
     super.initState();
-    _currentUid = FirebaseAuth.instance.currentUser!.uid;
+    _currentUid = FirebaseAuth.instance.currentUser?.uid; // ✅ FIXED
   }
-  // ── Open chat ──
+
   Future<void> _startChat(
       String uid, String name, String image) async {
     if (uid.isEmpty) return;
@@ -71,6 +72,14 @@ class _SavedScreenState extends State<SavedScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    // ✅ FIXED: Prevent crash if user is null
+    if (_currentUid == null) {
+      return const Scaffold(
+        body: Center(child: Text("User not logged in")),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
@@ -85,7 +94,6 @@ class _SavedScreenState extends State<SavedScreen> {
       body: Column(
         children: [
 
-          // ── Search Bar ──
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: TextField(
@@ -106,7 +114,6 @@ class _SavedScreenState extends State<SavedScreen> {
             ),
           ),
 
-          // ── Toggle: Name / Skill ──
           Padding(
             padding: const EdgeInsets.symmetric(
                 horizontal: 16, vertical: 4),
@@ -117,7 +124,6 @@ class _SavedScreenState extends State<SavedScreen> {
               ),
               child: Row(
                 children: [
-                  // Name toggle
                   Expanded(
                     child: GestureDetector(
                       onTap: () => setState(() => _searchMode = 0),
@@ -140,7 +146,6 @@ class _SavedScreenState extends State<SavedScreen> {
                       ),
                     ),
                   ),
-                  // Skill toggle
                   Expanded(
                     child: GestureDetector(
                       onTap: () {
@@ -176,12 +181,11 @@ class _SavedScreenState extends State<SavedScreen> {
 
           const SizedBox(height: 8),
 
-          // ── List from Firestore ──
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('users')
-                  .doc(_currentUid)
+                  .doc(_currentUid!) // ✅ SAFE now
                   .collection('saved_profiles')
                   .orderBy('savedAt', descending: true)
                   .snapshots(),
@@ -203,7 +207,6 @@ class _SavedScreenState extends State<SavedScreen> {
                   );
                 }
 
-                // ── Filter by name query ──
                 final docs = snapshot.data!.docs.where((doc) {
                   final data =
                       doc.data() as Map<String, dynamic>;
@@ -215,7 +218,6 @@ class _SavedScreenState extends State<SavedScreen> {
                     return name.contains(
                         _searchQuery.toLowerCase());
                   }
-                  // skill mode: TBD — show all for now
                   return true;
                 }).toList();
 
@@ -251,8 +253,6 @@ class _SavedScreenState extends State<SavedScreen> {
                       ),
                       child: Row(
                         children: [
-
-                          // ── Profile Image ──
                           CircleAvatar(
                             radius: 28,
                             backgroundColor: Colors.grey[300],
@@ -272,10 +272,7 @@ class _SavedScreenState extends State<SavedScreen> {
                                   )
                                 : null,
                           ),
-
                           const SizedBox(width: 16),
-
-                          // ── Name ──
                           Expanded(
                             child: Text(
                               name,
@@ -286,8 +283,6 @@ class _SavedScreenState extends State<SavedScreen> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-
-                          // ── Message Button (shifted right) ──
                           const SizedBox(width: 8),
                           GestureDetector(
                             onTap: () =>
