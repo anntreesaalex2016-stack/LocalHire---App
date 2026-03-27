@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'job_details_screen.dart';
 import 'chat_screen.dart';
 import 'message_screen.dart';
 
@@ -11,6 +10,10 @@ class NotificationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ Capture the Scaffold/route context BEFORE StreamBuilder
+    // This is the context that owns the Navigator route for this screen
+    final BuildContext routeContext = context;
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -31,6 +34,9 @@ class NotificationScreen extends StatelessWidget {
             .orderBy("createdAt", descending: true)
             .snapshots(),
         builder: (context, snapshot) {
+          // ⚠️ 'context' here is the StreamBuilder context — NOT the route context
+          // Always use routeContext for Navigator.pop
+
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -40,8 +46,7 @@ class NotificationScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.notifications_none,
-                      size: 64, color: Colors.grey),
+                  Icon(Icons.notifications_none, size: 64, color: Colors.grey),
                   SizedBox(height: 12),
                   Text("No notifications yet",
                       style: TextStyle(color: Colors.grey)),
@@ -65,24 +70,30 @@ class NotificationScreen extends StatelessWidget {
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: Text("Important",
-                      style:
-                          TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                      style: TextStyle(
+                          fontSize: 17, fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(height: 6),
-                ...highPriority.map((doc) =>
-                    _NotificationCard(doc: doc, userId: userId)),
+                ...highPriority.map((doc) => _NotificationCard(
+                      doc: doc,
+                      userId: userId,
+                      screenContext: routeContext, // ✅ route-level context
+                    )),
               ],
               if (normal.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: Text("General",
-                      style:
-                          TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                      style: TextStyle(
+                          fontSize: 17, fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(height: 6),
-                ...normal.map(
-                    (doc) => _NotificationCard(doc: doc, userId: userId)),
+                ...normal.map((doc) => _NotificationCard(
+                      doc: doc,
+                      userId: userId,
+                      screenContext: routeContext, // ✅ route-level context
+                    )),
               ],
             ],
           );
@@ -95,8 +106,13 @@ class NotificationScreen extends StatelessWidget {
 class _NotificationCard extends StatelessWidget {
   final QueryDocumentSnapshot doc;
   final String userId;
+  final BuildContext screenContext;
 
-  const _NotificationCard({required this.doc, required this.userId});
+  const _NotificationCard({
+    required this.doc,
+    required this.userId,
+    required this.screenContext,
+  });
 
   IconData _iconForType(String type) {
     switch (type) {
@@ -122,13 +138,18 @@ class _NotificationCard extends StatelessWidget {
   }
 
   Future<void> _markAsRead() async {
+  try {
     await FirebaseFirestore.instance
         .collection("notifications")
         .doc(userId)
         .collection("items")
         .doc(doc.id)
         .update({"isRead": true});
+  } catch (e) {
+    // ✅ Silently ignore permission errors — don't let this block navigation
+    debugPrint("⚠️ _markAsRead failed (ignored): $e");
   }
+}
 
   Future<void> _deleteNotification() async {
     await FirebaseFirestore.instance
@@ -157,29 +178,18 @@ class _NotificationCard extends StatelessWidget {
         ],
       ),
     );
-
-    if (confirm == true) {
-      await _deleteNotification();
-    }
+    if (confirm == true) await _deleteNotification();
   }
 
-  Future<void> _navigateToJob(BuildContext context, String jobId) async {
-    final jobDoc = await FirebaseFirestore.instance
-        .collection("jobs")
-        .doc(jobId)
-        .get();
-
-    if (!jobDoc.exists) return;
-
-    final jobData = jobDoc.data() as Map<String, dynamic>;
-    jobData["id"] = jobDoc.id;
-
+  Future<void> _navigateToJob(String jobId) async {
+    if (jobId.isEmpty) return;
     await _markAsRead();
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => JobDetailsScreen(job: jobData)),
-    );
+    debugPrint("✅ Popping NotificationScreen with jobId=$jobId");
+
+    // ✅ Use Navigator.of(screenContext) — this correctly targets the
+    // NotificationScreen route, not a nested StreamBuilder/ListView context
+    Navigator.of(screenContext).pop({'scrollToJobId': jobId});
   }
 
   Future<void> _navigateToMessage(
@@ -243,6 +253,8 @@ class _NotificationCard extends StatelessWidget {
     final String otherUserName =
         extraData["acceptedByName"] ?? extraData["senderName"] ?? "";
 
+    debugPrint("🔔 Notification type=$type | jobId=$jobId | extraData=$extraData");
+
     final bool isJobNotification =
         type == "instant_job" || type == "job_posted";
     final bool isMessageRequest = type == "message_request";
@@ -251,9 +263,9 @@ class _NotificationCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
       child: Container(
-        padding: const EdgeInsets.all(12), // smaller card
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isHigh ? const Color(0xFFF5A623) : Colors.white,
+          color: isHigh ? const Color.fromARGB(255, 255, 171, 37) : Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: !isHigh && !isRead
               ? Border.all(color: const Color(0xFFF5A623), width: 1)
@@ -289,9 +301,7 @@ class _NotificationCard extends StatelessWidget {
                 ),
               ],
             ),
-
             const SizedBox(height: 4),
-
             Text(
               subtitle,
               style: TextStyle(
@@ -299,10 +309,7 @@ class _NotificationCard extends StatelessWidget {
                 color: isHigh ? Colors.white70 : Colors.grey[700],
               ),
             ),
-
             const SizedBox(height: 8),
-
-            // ── Small text actions ──
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -313,14 +320,11 @@ class _NotificationCard extends StatelessWidget {
                       "Cancel",
                       style: TextStyle(
                         fontSize: 12,
-                        color:
-                            isHigh ? Colors.white70 : Colors.grey.shade600,
+                        color: isHigh ? Colors.white70 : Colors.grey.shade600,
                       ),
                     ),
                   ),
-
                 const SizedBox(width: 12),
-
                 GestureDetector(
                   onTap: () async {
                     if (isMessageRequest) {
@@ -333,7 +337,7 @@ class _NotificationCard extends StatelessWidget {
                         otherUserName: otherUserName,
                       );
                     } else if (isJobNotification) {
-                      await _navigateToJob(context, jobId);
+                      await _navigateToJob(jobId); // ✅ uses screenContext internally
                     }
                   },
                   child: Text(
@@ -345,8 +349,7 @@ class _NotificationCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color:
-                          isHigh ? Colors.white : const Color(0xFFF5A623),
+                      color: isHigh ? Colors.white : const Color(0xFFF5A623),
                     ),
                   ),
                 ),

@@ -30,12 +30,21 @@ class _HomeScreenState extends State<HomeScreen> {
   double maxPrice = 50000;
   double distance = 100;
   String selectedMode = "All";
+  String? _highlightedJobId;
+  final ScrollController _scrollController = ScrollController();    
+  final Map<String, GlobalKey> _jobKeys = {}; 
 
   @override
   void initState() {
     super.initState();
     _loadUserLocation();
   }
+
+  @override
+  void dispose() {
+  _scrollController.dispose();
+  super.dispose();
+}
 
   Future<void> _loadUserLocation() async {
     try {
@@ -111,14 +120,17 @@ for (var doc in snapshot.data!.docs) {
 
     // Delete only AFTER the day passes
     if (jobDay.isBefore(todayStart)) {
-      FirebaseFirestore.instance
-          .collection("jobs")
-          .doc(doc.id)
-          .delete();
-      continue;
-    }
+  final jobOwnerId = data["userId"] ?? data["postedBy"] ?? "";
+  if (jobOwnerId == widget.userId) {
+    FirebaseFirestore.instance
+        .collection("jobs")
+        .doc(doc.id)
+        .delete()
+        .catchError((_) {}); // ✅ silently ignore permission errors
   }
-
+  continue; // always skip expired jobs from display regardless
+}
+  }
   jobs.add({
     ...data,
     "jobId": doc.id,
@@ -180,6 +192,7 @@ for (var doc in snapshot.data!.docs) {
                   }
 
                   return ListView.builder(
+                    controller: _scrollController,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: filteredJobs.length,
                     itemBuilder: (context, index) {
@@ -278,14 +291,38 @@ for (var doc in snapshot.data!.docs) {
           ),
           const SizedBox(width: 10),
           GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => NotificationScreen(userId: widget.userId),
-                ),
-              );
-            },
+          onTap: () async {
+  final result = await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => NotificationScreen(userId: widget.userId),
+    ),
+  );
+
+  debugPrint("📬 Returned from NotificationScreen: $result"); // ✅ add this
+
+  if (result != null && result['scrollToJobId'] != null) {
+    final jobId = result['scrollToJobId'] as String;
+    setState(() => _highlightedJobId = jobId);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final key = _jobKeys[jobId];
+      debugPrint("🔑 Looking for key: $jobId | found: ${key?.currentContext != null}");
+      if (key?.currentContext != null) {
+        Scrollable.ensureVisible(
+          key!.currentContext!,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOut,
+          alignment: 0.1,
+        );
+      }
+    });
+
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _highlightedJobId = null);
+    });
+  }
+},
             child: Container(
               width: 50,
               height: 50,
@@ -563,6 +600,9 @@ for (var doc in snapshot.data!.docs) {
   }
 
   Widget _jobCard(Map<String, dynamic> job) {
+  final String jobId = job["jobId"] ?? "";
+  _jobKeys[jobId] ??= GlobalKey();
+  final bool isHighlighted = _highlightedJobId != null && _highlightedJobId == jobId;
   final String type = job["type"] ?? "N/A";
   final bool isInstant = job["isInstantJob"] ?? false;
   final String title = job["title"] ?? "No Title";
@@ -582,11 +622,17 @@ for (var doc in snapshot.data!.docs) {
   }
 
   return Container(
+    key: _jobKeys[jobId],
     margin: const EdgeInsets.only(bottom: 16),
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
-      color: const Color.fromARGB(255, 245, 228, 195), 
+    color: isHighlighted
+    ? const Color.fromARGB(255, 192, 131, 32)         
+    : const Color.fromARGB(255, 245, 228, 195),
       borderRadius: BorderRadius.circular(18),
+       border: isHighlighted
+          ? Border.all(color: const Color.fromARGB(255, 156, 95, 3), width: 2.5)
+          : null,
       boxShadow: [
         BoxShadow(
           color: Colors.black.withOpacity(0.05),
