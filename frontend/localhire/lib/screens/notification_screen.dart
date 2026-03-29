@@ -105,6 +105,8 @@ class _NotificationCard extends StatelessWidget {
         return Icons.check_circle;
       case "instant_job":
         return Icons.flash_on;
+      case "job_posted":
+        return Icons.work_outline;
       default:
         return Icons.notifications;
     }

@@ -127,11 +127,15 @@ exports.onRequestAccepted = onDocumentUpdated(
 
 // ═══════════════════════════════════════════════
 // TRIGGER 3 — Instant Job Posted
+// ⚡ Within 50km → HIGH priority
+// 📢 Beyond 50km → NORMAL priority
 // ═══════════════════════════════════════════════
 exports.onInstantJobPosted = onDocumentCreated(
   "jobs/{jobId}",
   async (event) => {
     const job = event.data.data();
+
+    // Only handle instant jobs
     if (!job.isInstantJob) return;
 
     const jobLat = job.locationGeoPoint?.latitude;
@@ -142,12 +146,12 @@ exports.onInstantJobPosted = onDocumentCreated(
     const posterId = job.postedBy;
 
     if (!jobLat || !jobLng) {
-      console.log("⚠️ No location on job");
+      console.log("⚠️ No location on instant job — skipping");
       return;
     }
 
     const usersSnapshot = await db.collection("users").get();
-    console.log(`📢 Notifying ${usersSnapshot.size} users`);
+    console.log(`⚡ Instant job — notifying ${usersSnapshot.size} users`);
 
     const promises = usersSnapshot.docs.map(async (userDoc) => {
       const userId = userDoc.id;
@@ -163,14 +167,15 @@ exports.onInstantJobPosted = onDocumentCreated(
         userGeo.latitude, userGeo.longitude,
       );
 
-      const isNearby = distance <= 100;
+      // Within 50km → HIGH, beyond 50km → NORMAL
+      const isNearby = distance <= 50;
 
       await sendNotification({
         toUserId: userId,
-        title: isNearby ? "⚡ Instant Job Nearby!" : "New Job Available",
+        title: isNearby ? "⚡ Instant Job Nearby!" : "New Instant Job",
         body: isNearby
-          ? `${jobTitle} needed now in ${jobLocation}`
-          : `${jobTitle} available in ${jobLocation}`,
+          ? `${jobTitle} needed NOW in ${jobLocation} — ${Math.round(distance)}km away`
+          : `${jobTitle} posted in ${jobLocation} — ${Math.round(distance)}km away`,
         type: "instant_job",
         priority: isNearby ? "high" : "normal",
         data: {
@@ -183,7 +188,72 @@ exports.onInstantJobPosted = onDocumentCreated(
     });
 
     await Promise.all(promises);
-    console.log(`✅ Done for job ${jobId}`);
+    console.log(`✅ Instant job notifications done for ${jobId}`);
+  }
+);
+
+// ═══════════════════════════════════════════════
+// TRIGGER 4 — Regular Job Posted
+// 📋 Within 80km → NORMAL priority notification
+// 🚫 Beyond 80km → No notification
+// ═══════════════════════════════════════════════
+exports.onRegularJobPosted = onDocumentCreated(
+  "jobs/{jobId}",
+  async (event) => {
+    const job = event.data.data();
+
+    // Only handle regular (non-instant) jobs
+    if (job.isInstantJob) return;
+
+    const jobLat = job.locationGeoPoint?.latitude;
+    const jobLng = job.locationGeoPoint?.longitude;
+    const jobTitle = job.title || "Job";
+    const jobLocation = job.location || "Unknown";
+    const jobId = event.params.jobId;
+    const posterId = job.postedBy;
+
+    if (!jobLat || !jobLng) {
+      console.log("⚠️ No location on regular job — skipping");
+      return;
+    }
+
+    const usersSnapshot = await db.collection("users").get();
+    console.log(`📋 Regular job — checking ${usersSnapshot.size} users`);
+
+    const promises = usersSnapshot.docs.map(async (userDoc) => {
+      const userId = userDoc.id;
+      const userData = userDoc.data();
+
+      if (userId === posterId) return;
+
+      const userGeo = userData.locationGeoPoint;
+      if (!userGeo) return;
+
+      const distance = getDistanceKm(
+        jobLat, jobLng,
+        userGeo.latitude, userGeo.longitude,
+      );
+
+      // Only notify users within 80km
+      if (distance > 80) return;
+
+      await sendNotification({
+        toUserId: userId,
+        title: "New Job Posted 💼",
+        body: `${jobTitle} available in ${jobLocation} — ${Math.round(distance)}km away`,
+        type: "job_posted",
+        priority: "normal",
+        data: {
+          jobId,
+          jobTitle,
+          jobLocation,
+          distance: String(Math.round(distance)),
+        },
+      });
+    });
+
+    await Promise.all(promises);
+    console.log(`✅ Regular job notifications done for ${jobId}`);
   }
 );
 
