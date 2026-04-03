@@ -310,16 +310,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return "Not currently on a job";
   }
 
-  Future<void> _sendSMS(String phoneNumbers, String body) async {
-    final uri = Uri(
-      scheme: 'sms',
-      path: phoneNumbers,
-      queryParameters: {'body': body},
+ Future<void> _sendSMS(String phoneNumbers, String body) async {
+  final numbersList = phoneNumbers.split(";");
+
+  for (String number in numbersList) {
+    final uri = Uri.parse(
+      "sms:$number?body=${Uri.encodeComponent(body)}",
     );
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
+
+    await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
+
+    await Future.delayed(const Duration(milliseconds: 500));
   }
+}
 
   Future<void> _logSOSToFirestore({
     required String employeeName,
