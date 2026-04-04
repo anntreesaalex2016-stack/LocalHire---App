@@ -86,10 +86,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                     return const Center(child: Text("No Jobs Available"));
                   }
-                  List<Map<String, dynamic>> jobs =
+                   List<Map<String, dynamic>> jobs =
                       snapshot.data!.docs.map((doc) {
-                    return doc.data() as Map<String, dynamic>;
-                  }).toList();
+                    return {
+                      ...doc.data() as Map<String, dynamic>,
+                      "jobId": doc.id,   // ← add this
+                    };
+                  }).toList(); 
 
                   List<Map<String, dynamic>> filteredJobs =
                       jobs.where((job) {
@@ -614,12 +617,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             .split(' ')[0]
                         : (job["date"] ?? "")
                   };
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => JobDetailsScreen(job: jobForDetails),
+                   Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => JobDetailsScreen(
+                      job: jobForDetails,
+                      currentUserId: widget.userId,  // ← add this
                     ),
-                  );
+                  ),
+                );
                 },
                 child: const Text("View"),
               ),
